@@ -1,24 +1,22 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
+import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import router from './routes'
+import 'element-plus/dist/index.css'
+import App from './App.vue'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import pinia from './stores/index.js'
+import { ParticlesComponent } from 'particles.vue3'
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+const app = createApp(App)
+app.use(ElementPlus, {
+    locale: zhCn,
+})
 
-setupCounter(document.querySelector('#counter'))
+
+app.use(router)
+app.use(pinia)
+
+
+app.mount('#app')

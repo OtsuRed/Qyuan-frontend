@@ -15,6 +15,11 @@ export const constRoutes = [
                 meta:{title: '订阅包选择页面'}
             },
         ]
+    },{
+    path: '/pdf',
+        name: 'pdf',
+        component: () => import('@/views/pdf/index.vue'),
+        meta:{title: 'pdf'},
     }
 
 ]

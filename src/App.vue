@@ -10,14 +10,6 @@
 
 <style>
 /* 全局基础样式 */
-body {
-  font-family: -apple-system, BlinkMacSystemFont,
-  'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
-  sans-serif;
-  margin: 0;
-  color: #333;  /* 更易读的文字颜色 */
-  background: #ffffff; /* 明确设置白色背景 */
-}
 
 </style>
 

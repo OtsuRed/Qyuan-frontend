@@ -20,6 +20,18 @@ export const constRoutes = [
         name: 'pdf',
         component: () => import('@/views/pdf/index.vue'),
         meta:{title: 'pdf'},
+    }, {
+    // 袁 - 用户主页
+    path: '/user',
+        name: 'user',
+        component: () => import('@/views/user/index.vue'),
+        meta:{title: 'user'},
+    }, {
+    // 袁 - 平台主页
+    path: '/home',
+        name: 'home',
+        component: () => import('@/views/home/index.vue'),
+        meta:{title: 'home'},
     }
 
 ]

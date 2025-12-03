@@ -21,17 +21,27 @@ export const constRoutes = [
         component: () => import('@/views/pdf/index.vue'),
         meta:{title: 'pdf'},
     }, {
-    // 袁 - 用户主页
+    // 用户主页
     path: '/user',
         name: 'user',
         component: () => import('@/views/user/User.vue'),
         meta:{title: 'user'},
     }, {
-    // 袁 - 平台主页
-    path: '/home',
+        // 平台主页
+        path: '/home',
         name: 'home',
         component: () => import('@/views/home/Home.vue'),
-        meta:{title: 'home'},
+        meta: {title: 'home'},
+    }, {
+        path: '/',
+        name: 'default',
+        component: () => import('@/views/home/Home.vue'),
+        meta: {title: 'home'},
+    }, {
+        path: '/search',
+        name: 'search',
+        component: () => import('@/views/search/Search.vue'),
+        meta: {title: 'search'},
     }
 
 ]

@@ -10,7 +10,7 @@
       <div class="nav-right">
         <ul class="nav-menu">
           <li class="nav-item">
-            <router-link to="/user" class="nav-link">首页</router-link>
+            <router-link to="/home" class="nav-link">首页</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/user" class="nav-link">发现</router-link>

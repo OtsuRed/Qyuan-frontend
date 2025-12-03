@@ -20,6 +20,35 @@ export const constRoutes = [
         name: 'pdf',
         component: () => import('@/views/pdf/index.vue'),
         meta:{title: 'pdf'},
+    },{
+        path: '/readpaper',
+        name: 'readpaper',
+        component: () => import('@/views/readpaper/index.vue'),
+        redirect: '/readpaper/paper',
+        meta: { title: '论文阅读' },
+        children: [
+            {
+                path: 'paper',
+                name: 'readpaperPaper',
+                component: () => import('@/views/readpaper/paper.vue'),
+                meta: { title: '论文详情' }
+            }
+        ]
+    },
+    // 新增期刊相关路由配置
+    {
+        path: '/periodical',
+        name: 'periodical',
+        component: () => import('@/views/periodical/index.vue'), // 直接在views目录下
+        redirect: '/periodical/periodical',
+        meta: { title: '期刊浏览' },
+        children: [
+            {
+                path: 'periodical',
+                name: 'periodicalDetail',
+                component: () => import('@/views/periodical/periodical.vue'), // 直接在views/periodical目录下
+                meta: { title: '期刊详情' }
+            }
+        ]
     }
-
 ]

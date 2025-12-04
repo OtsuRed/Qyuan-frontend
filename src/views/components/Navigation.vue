@@ -3,7 +3,9 @@
     <div class="nav-container">
       <!-- 左侧项目名称 -->
       <div class="nav-left">
-        <h1 class="project-name">千源万码</h1>
+        <div class="left">
+          <el-image :src="logoSrc" alt="logo" class="logo" @click="navigateToHome"/>
+        </div>
       </div>
 
       <!-- 右侧导航项目 -->
@@ -45,6 +47,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import logoSrc from "@/asserts/head/logo.png";
 
 const router = useRouter();
 
@@ -66,6 +69,10 @@ const userAvatar = computed(() => userStore.value.user?.avatar || 'default-avata
 // 导航方法
 const navigateTo = (path) => {
   router.push(path);
+};
+
+const navigateToHome = () => {
+  router.push('/home');
 };
 
 // 模拟登出功能
@@ -178,5 +185,18 @@ const handleLogout = () => {
 .register-btn {
   background-color: #1890ff;
   color: white;
+}
+
+.left {
+  margin-left: 3%;
+
+  height: 60px;
+  width: 200px;
+  display: flex;
+  flex-direction: row;
+}
+
+.logo {
+  cursor: pointer;
 }
 </style>

@@ -59,11 +59,7 @@ import router from "@/routes/index.js";
   height: 30px;
   margin-right: 10px;         /* 改为右边距，与用户名分隔 */
 }
-.left {
-  margin-left: 3%;
-  display: flex;
-  flex-direction: row;
-}
+
 .logo{
   width: 200px;
   object-fit: cover;

@@ -2,11 +2,13 @@
 
 import Head from "@/views/components/Head.vue";
 import List from "@/views/order/list.vue";
+import Navigation from "@/views/components/Navigation.vue";
 
 </script>
 
 <template>
   <div>
+    <Navigation></Navigation>
     <Head/>
     <!--    <h1>这是一个订单页面</h1>-->
     <!--    <router-view></router-view>-->

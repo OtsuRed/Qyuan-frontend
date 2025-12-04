@@ -21,5 +21,4 @@ export const constRoutes = [
         component: () => import('@/views/pdf/index.vue'),
         meta:{title: 'pdf'},
     }
-
 ]

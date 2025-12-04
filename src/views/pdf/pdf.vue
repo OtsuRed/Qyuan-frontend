@@ -122,7 +122,7 @@ onMounted(() => {
   })
 
   // 监听文字选择事件
-  document.addEventListener('selectionchange', (e)=>{console.log('selectionchange---------');handleSelection(e)})
+  document.addEventListener('selectionchange', (e)=>{handleSelection(e)})
 })
 
 // 监听鼠标抬起事件，显示浮动按钮
@@ -255,7 +255,6 @@ const renderPDF = async (arrayBuffer) => {
       highlightLayer.style.left = '0'
       highlightLayer.style.width = `${viewport.width}px`
       highlightLayer.style.height = `${viewport.height}px`
-      highlightLayer.style.pointerEvents = 'none'
       highlightLayer.style.zIndex = '1'
     }
     
@@ -551,20 +550,25 @@ const renderHighlight = (highlight) => {
   
   highlight.rects.forEach(rect => {
     const highlightEl = document.createElement('div')
-    highlightEl.className = 'highlight-mark'
     highlightEl.style.position = 'absolute'
     highlightEl.style.left = `${rect.left}px`
-    highlightEl.style.top = `${rect.top+4}px`
+    highlightEl.style.top = `${rect.top+3}px`
     highlightEl.style.width = `${rect.width}px`
-    highlightEl.style.height = `${rect.height-7}px`
+    highlightEl.style.height = `${rect.height-5}px`
     highlightEl.style.backgroundColor = highlight.color
     // highlightEl.style.opacity = '0.3'
-    // highlightEl.style.pointerEvents = 'none'
+    highlightEl.style.pointerEvents = 'none'
     highlightEl.style.zIndex = '1'
     highlightEl.dataset.highlightId = highlight.id
-    
+
+    highlightEl.addEventListener('click',(e) => {
+      e.stopPropagation()
+      e.target.style.color = 'white'
+      console.log("aaaaaaaaaaaaaaaaaa")
+    })
     highlightLayer.appendChild(highlightEl)
   })
+
 }
 
 // 清除所有高亮
@@ -696,7 +700,7 @@ canvas {
   forced-color-adjust: none;
   transform-origin: 0% 0%;
   /* 确保文字层可以响应鼠标事件 */
-  pointer-events: auto;
+  pointer-events: none;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -708,7 +712,7 @@ canvas {
 }
 
 .textLayer-hidden {
-  pointer-events: none;
+  //pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -779,36 +783,24 @@ canvas {
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events: none;
-  z-index: 1;
+  z-index: 3;
   mix-blend-mode: multiply;
+  //pointer-events: none;
 }
 
 .highlight-mark {
   position: absolute;
-  pointer-events: none;
+  pointer-events: auto; /* ✅ 允许点击 */
   border-radius: 2px;
+
   mix-blend-mode: multiply;
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* 控制按钮样式 */
-.highlight-btn, .clear-highlight-btn {
-  padding: 6px 12px;
-  border: 1px solid #999;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.highlight-btn:hover:not(:disabled) {
-  background-color: #f0f0f0;
-}
-
-.highlight-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.highlight-mark.selected {
+  outline: 2px solid #333;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  opacity: 0.9; /* 选中时更深一点 */
 }
 
 .clear-highlight-btn:hover {

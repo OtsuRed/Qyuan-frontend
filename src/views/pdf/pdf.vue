@@ -322,15 +322,7 @@ const onFileChange = async (event) => {
   
   const arrayBuffer = await file.arrayBuffer()
   
-  // 如果是从URL加载的PDF，尝试根据URL获取paper_id
-  // 如果是本地文件上传，需要用户选择对应的论文或创建新论文
-  // TODO: 这里需要根据实际业务逻辑处理
-  // 方案1: 如果PDF是从paper列表打开的，应该已经知道paper_id
-  // 方案2: 如果是上传新文件，需要调用创建论文的API
-  // 方案3: 如果PDF有URL，可以通过URL查找paper_id
-  
-  // 临时方案：需要从外部传入paper_id或通过其他方式获取
-  // currentPaperId.value = null // 需要从外部传入或通过API获取
+
   
   pageCanvases.length = 0
   highlights.value = [] // 清除高亮
@@ -556,21 +548,47 @@ const renderHighlight = (highlight) => {
     highlightEl.style.width = `${rect.width}px`
     highlightEl.style.height = `${rect.height-5}px`
     highlightEl.style.backgroundColor = highlight.color
-    // highlightEl.style.opacity = '0.3'
-    highlightEl.style.pointerEvents = 'none'
-    highlightEl.style.zIndex = '1'
+    highlightEl.style.opacity = '0.5'
+    highlightEl.style.pointerEvents = 'auto'
+    highlightEl.style.zIndex = '1500'
+    highlightEl.style.cursor = 'pointer'
     highlightEl.dataset.highlightId = highlight.id
 
-    highlightEl.addEventListener('click',(e) => {
-      e.stopPropagation()
-      e.target.style.color = 'white'
-      console.log("aaaaaaaaaaaaaaaaaa")
+    highlightEl.addEventListener('dblclick',(e) => {
+      handleHighlightDoubleClick(highlight)
     })
     highlightLayer.appendChild(highlightEl)
   })
 
 }
+const handleHighlightDoubleClick = (highlight) => {
+  console.log('处理高亮双击:', highlight.id)
+  // 例如：显示编辑菜单或删除确认
+    deleteHighlightById(highlight.id)
 
+}
+const deleteHighlightById = async (highlightId) => {
+  try {
+    // 从后端删除
+    // await deleteHighlight(highlightId)
+    console.log("后端删除")
+    // 从本地数据中移除
+    const index = highlights.value.findIndex(h => h.id === highlightId)
+    if (index !== -1) {
+      highlights.value.splice(index, 1)
+    }
+
+    // 从DOM中移除
+    document.querySelectorAll(`[data-highlight-id="${highlightId}"]`).forEach(el => {
+      el.remove()
+    })
+
+    console.log('高亮已删除:', highlightId)
+  } catch (error) {
+    console.error('删除高亮失败:', error)
+    alert('删除高亮失败')
+  }
+}
 // 清除所有高亮
 const clearHighlights = async () => {
   if (!confirm('确定要清除所有高亮吗？')) {
@@ -700,7 +718,7 @@ canvas {
   forced-color-adjust: none;
   transform-origin: 0% 0%;
   /* 确保文字层可以响应鼠标事件 */
-  pointer-events: none;
+  pointer-events: auto;
   user-select: text;
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -708,7 +726,7 @@ canvas {
   /* PDF.js 文字层必需的样式 - font-size: 0 让子元素完全使用内联样式 */
   font-size: 0;
   /* 优化文字选择体验 */
-  z-index: 2;
+  z-index: 0;
 }
 
 .textLayer-hidden {
@@ -742,6 +760,7 @@ canvas {
   /* 确保选中区域精确匹配 */
   display: inline-block;
   vertical-align: baseline;
+  z-index: 0;
 }
 
 /* 鼠标悬停在文字上时的视觉反馈 */
@@ -783,16 +802,16 @@ canvas {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 3;
+  z-index: 10;
   mix-blend-mode: multiply;
-  //pointer-events: none;
+  pointer-events: none;
 }
 
 .highlight-mark {
   position: absolute;
   pointer-events: auto; /* ✅ 允许点击 */
   border-radius: 2px;
-
+  z-index: 300;
   mix-blend-mode: multiply;
   transition: opacity 0.2s ease, box-shadow 0.2s ease;
 }

@@ -1,7 +1,7 @@
 <script setup>
 
 
-import periodical from "@/views/periodical/periodical.vue";
+import search from "@/views/search/search.vue";
 import Navigation from "@/views/components/Navigation.vue";
 
 </script>
@@ -9,10 +9,10 @@ import Navigation from "@/views/components/Navigation.vue";
 <template>
   <div>
     <Navigation/>
-    <!--    <h1>这是一个期刊查看页面</h1>-->
+    <!--    <h1>这是一个搜索查看页面</h1>-->
     <!--    <router-view></router-view>-->
     <!-- 使用正确的静态资源路径 -->
-    <periodical></periodical>
+    <search></search>
   </div>
 </template>
 

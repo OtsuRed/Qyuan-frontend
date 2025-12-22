@@ -1,38 +1,29 @@
 <template>
   <div class="paper-detail-page">
-    <!-- 论文标题 -->
     <div class="paper-title">
       <h1>论文标题：这是一篇学术论文的示例标题</h1>
       <p class="doi">DOI: 10.xxxx/j.cnki.xxxx.xxxx.xxxx</p>
+      <p class="paper-link">论文链接: <a href="https://example.com/paper" target="_blank" rel="noopener noreferrer">https://example.com/paper</a></p>
     </div>
 
-    <!-- 作者和单位信息区 -->
     <div class="info-block author-info">
       <div class="info-content">
         <p><span class="info-label">作者:</span> 作者1、作者2、作者3</p>
-        <p><span class="info-label">单位:</span> 单位信息1; 单位信息2; 单位信息3</p>
+        <p><span class="info-label">提交者:</span> 提交者信息1; 提交者信息2; 提交者信息3</p>
       </div>
     </div>
 
-    <!-- 操作按钮区 -->
     <div class="action-buttons">
-      <button class="btn ai-reading">AI文献伴读</button>
       <button class="btn online-reading">在线阅读</button>
-      <button class="btn html-reading">HTML阅读</button>
       <button class="btn download">下载</button>
-      <button class="btn review">评审材料</button>
-      <button class="btn cite">引用</button>
-      <button class="btn favorite">收藏</button>
+      <button class="btn favorite" @click="collectPaper">收藏</button>
       <button class="btn share">分享</button>
-      <button class="btn print">打印</button>
+      <button class="btn claim" @click="showClaimModal = true">认领</button>
     </div>
 
-    <!-- 主要内容区 - 左右分栏 -->
     <div class="main-content">
-      <!-- 左侧：整合的信息板块 -->
       <div class="left-column">
         <div class="info-block integrated-block">
-          <!-- 摘要部分 -->
           <div class="section abstract-section">
             <h3 class="section-title">摘要</h3>
             <div class="section-content">
@@ -44,7 +35,6 @@
             </div>
           </div>
 
-          <!-- 关键词部分 -->
           <div class="section keywords-section">
             <h3 class="section-title">关键词</h3>
             <div class="section-content">
@@ -57,15 +47,13 @@
             </div>
           </div>
 
-          <!-- 分类号部分 -->
-          <div class="section classification-section">
-            <h3 class="section-title">分类号</h3>
+          <div class="section journal-section">
+            <h3 class="section-title">期刊来源</h3>
             <div class="section-content">
-              <p>分类号信息：TP311.13；TP391.1</p>
+              <p><span class="info-label">期刊名称:</span> 计算机工程与应用</p>
             </div>
           </div>
 
-          <!-- 发表信息部分 -->
           <div class="section publication-section">
             <h3 class="section-title">发表信息</h3>
             <div class="section-content">
@@ -84,9 +72,7 @@
         </div>
       </div>
 
-      <!-- 右侧：参考文献及新增板块 -->
       <div class="right-column">
-        <!-- 参考文献板块 -->
         <div class="info-block references-block">
           <div class="block-header">
             参考文献(15)
@@ -96,7 +82,7 @@
               </label>
               <select v-model="sortType" class="sort-select">
                 <option value="date">按发表时间排序</option>
-                <option value="citation">按被引频次排序</option>
+                <option value="citation">按被引量排序</option>
               </select>
               <button class="network-btn">查看引文网络</button>
             </div>
@@ -112,70 +98,86 @@
           </div>
         </div>
 
-        <!-- 相关文献板块 -->
-        <div class="info-block related-docs-block">
-          <div class="block-header">
-            相关文献
-            <button class="refresh-btn" @click="refreshRelatedDocs">换一批</button>
-          </div>
-          <div class="block-content">
-            <ul class="related-docs-list">
-              <li class="related-doc-item">
-                <a href="#" class="doc-title">相关文献标题1：与本文主题相关的研究内容</a>
-                <p class="doc-meta">作者 · 期刊名称 · 2024</p>
-              </li>
-              <li class="related-doc-item">
-                <a href="#" class="doc-title">相关文献标题2：涉及相似研究方法的论文</a>
-                <p class="doc-meta">作者 · 期刊名称 · 2023</p>
-              </li>
-              <li class="related-doc-item">
-                <a href="#" class="doc-title">相关文献标题3：探讨同一领域问题的文献</a>
-                <p class="doc-meta">作者 · 期刊名称 · 2024</p>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- 相关主题板块 -->
         <div class="info-block related-topics-block">
-          <div class="block-header">相关主题</div>
+          <div class="block-header">论文类别</div>
           <div class="block-content">
             <div class="topics-container">
-              <a href="#" class="topic-tag">主题标签1</a>
-              <a href="#" class="topic-tag">主题标签2</a>
-              <a href="#" class="topic-tag">主题标签3</a>
-              <a href="#" class="topic-tag">主题标签4</a>
-              <a href="#" class="topic-tag">主题标签5</a>
-              <a href="#" class="topic-tag">主题标签6</a>
-              <a href="#" class="topic-tag">主题标签7</a>
-              <a href="#" class="topic-tag">主题标签8</a>
+              <a href="#" class="topic-tag">计算机科学</a>
+              <a href="#" class="topic-tag">人工智能</a>
+              <a href="#" class="topic-tag">机器学习</a>
+              <a href="#" class="topic-tag">数据挖掘</a>
+              <a href="#" class="topic-tag">深度学习</a>
+              <a href="#" class="topic-tag">自然语言处理</a>
+              <a href="#" class="topic-tag">计算机视觉</a>
+              <a href="#" class="topic-tag">大数据</a>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 页脚 -->
     <footer class="page-footer">
       <p>© 2025 千源学术 版权所有</p>
       <p>万方数据知识服务平台提供技术支持</p>
     </footer>
+
+    <CollectionModal 
+      :visible="showCollectionModal" 
+      :initItem="currentCollectItem"
+      @close="showCollectionModal = false"
+    />
+
+    <ClaimModal
+      :visible="showClaimModal"
+      title="论文认领申请"
+      descriptionPlaceholder="请输入认领该论文的原因、相关证明说明等内容..."
+      @close="showClaimModal = false"
+      @submit="handlePaperClaimSubmit"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import CollectionModal from '@/views/components/CollectionModal/index.vue';
+import ClaimModal from '@/views/components/ClaimModal/index.vue';
 
-// 状态管理
 const showFullAbstract = ref(false);
 const showEnglishInfo = ref(false);
 const onlyFullText = ref(false);
 const sortType = ref('date');
 
-// 相关文献刷新功能
-const refreshRelatedDocs = () => {
-  // 实际项目中这里会发起请求获取新的相关文献
-  alert('已刷新相关文献列表');
+const showCollectionModal = ref(false);
+const currentCollectItem = ref(null);
+const showClaimModal = ref(false);
+
+const collectPaper = () => {
+  console.log('✅ 收藏按钮被点击！');
+  
+  currentCollectItem.value = {
+    type: 'paper',
+    title: '这是一篇学术论文的示例标题',
+    doi: '10.xxxx/j.cnki.xxxx.xxxx.xxxx',
+    url: 'https://example.com/paper',
+    collectTime: new Date().toLocaleString('zh-CN', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '-')
+  };
+  
+  showFullAbstract.value = false;
+  showCollectionModal.value = true;
+  console.log('✅ 收藏弹窗状态已设置为：', showCollectionModal.value);
+  console.log('✅ 要收藏的论文信息：', currentCollectItem.value);
+};
+
+const handlePaperClaimSubmit = (submitData) => {
+  console.log('📄 论文认领提交数据：', submitData);
+  alert('论文认领申请已提交，我们将在1-3个工作日内审核并回复您！');
+  showClaimModal.value = false;
 };
 </script>
 
@@ -189,7 +191,6 @@ const refreshRelatedDocs = () => {
   color: #333;
 }
 
-/* 论文标题样式 */
 .paper-title {
   margin-bottom: 20px;
   padding-bottom: 15px;
@@ -198,7 +199,7 @@ const refreshRelatedDocs = () => {
 
 .paper-title h1 {
   font-size: 22px;
-  color: #1a56db; /* 更鲜艳的蓝色标题 */
+  color: #1a56db;
   margin-bottom: 10px;
   line-height: 1.4;
 }
@@ -206,9 +207,25 @@ const refreshRelatedDocs = () => {
 .doi {
   color: #666;
   font-size: 14px;
+  margin-bottom: 5px;
 }
 
-/* 信息块通用样式 */
+.paper-link {
+  color: #2563eb;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.paper-link a {
+  color: #2563eb;
+  text-decoration: none;
+  margin-left: 5px;
+}
+
+.paper-link a:hover {
+  text-decoration: underline;
+}
+
 .info-block {
   background: #fff;
   border-radius: 8px;
@@ -218,7 +235,6 @@ const refreshRelatedDocs = () => {
   border: 1px solid #f0f0f0;
 }
 
-/* 作者信息样式 */
 .author-info .info-content {
   padding: 15px;
   display: flex;
@@ -226,7 +242,6 @@ const refreshRelatedDocs = () => {
   gap: 15px;
 }
 
-/* 按钮样式 */
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -251,36 +266,34 @@ const refreshRelatedDocs = () => {
   font-weight: 500;
 }
 
-/* 按钮色彩增强 */
-.ai-reading {
-  background-color: #7c3aed; /* 鲜艳的紫色 */
-  color: white;
-}
-
 .online-reading {
-  background-color: #2563eb; /* 鲜艳的蓝色 */
-  color: white;
-}
-
-.html-reading {
-  background-color: #0ea5e9; /* 亮蓝色 */
+  background-color: #2563eb;
   color: white;
 }
 
 .download {
-  background-color: #10b981; /* 鲜绿色 */
+  background-color: #10b981;
   color: white;
 }
 
-.review {
-  background-color: #f59e0b; /* 橙色 */
-  color: white;
-}
-
-.cite, .favorite, .share, .print {
+.favorite, .share {
   background-color: #f1f5f9;
   color: #334155;
   border: 1px solid #e2e8f0;
+}
+
+.claim {
+  background-color: #fb923c;
+  color: white;
+}
+
+.claim:hover {
+  background-color: #f97316;
+}
+
+.action-buttons .favorite {
+  position: relative;
+  z-index: 999 !important;
 }
 
 .btn:hover {
@@ -289,7 +302,6 @@ const refreshRelatedDocs = () => {
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* 主要内容区 - 左右分栏 */
 .main-content {
   display: flex;
   gap: 20px;
@@ -303,7 +315,6 @@ const refreshRelatedDocs = () => {
   flex: 1;
 }
 
-/* 整合信息板块样式 */
 .integrated-block {
   padding: 20px;
 }
@@ -324,7 +335,7 @@ const refreshRelatedDocs = () => {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 10px;
-  color: #1e40af; /* 更深的蓝色标题 */
+  color: #1e40af;
   display: flex;
   align-items: center;
 }
@@ -344,7 +355,6 @@ const refreshRelatedDocs = () => {
   font-size: 14px;
 }
 
-/* 关键词样式 */
 .keyword-tags {
   display: flex;
   flex-wrap: wrap;
@@ -352,17 +362,16 @@ const refreshRelatedDocs = () => {
 }
 
 .tag {
-  background: #dbeafe; /* 更鲜艳的蓝色背景 */
-  color: #1e40af; /* 更深的蓝色文字 */
+  background: #dbeafe;
+  color: #1e40af;
   padding: 5px 12px;
   border-radius: 15px;
   font-size: 14px;
   font-weight: 500;
 }
 
-/* 发表信息样式 */
 .toggle-english {
-  color: #2563eb; /* 更鲜艳的蓝色 */
+  color: #2563eb;
   background: none;
   border: none;
   padding: 5px 0;
@@ -381,12 +390,11 @@ const refreshRelatedDocs = () => {
   border-top: 1px dashed #e0e7ff;
 }
 
-/* 右侧各板块通用样式 */
 .block-header {
-  background: #eff6ff; /* 浅蓝色背景 */
+  background: #eff6ff;
   padding: 12px 15px;
   font-weight: 600;
-  color: #1e40af; /* 蓝色标题 */
+  color: #1e40af;
   border-bottom: 1px solid #dbeafe;
   display: flex;
   flex-wrap: wrap;
@@ -399,7 +407,6 @@ const refreshRelatedDocs = () => {
   padding: 15px;
 }
 
-/* 参考文献样式 */
 .references-block .block-content {
   overflow-y: auto;
   max-height: 300px;
@@ -443,44 +450,6 @@ const refreshRelatedDocs = () => {
   color: #475569;
 }
 
-/* 相关文献样式 */
-.refresh-btn {
-  color: #2563eb;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 2px 5px;
-  font-weight: 500;
-}
-
-.related-doc-item {
-  padding: 10px 0;
-  border-bottom: 1px dashed #e2e8f0;
-}
-
-.doc-title {
-  color: #1d4ed8; /* 更深的蓝色 */
-  text-decoration: none;
-  font-size: 14px;
-  line-height: 1.4;
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.doc-title:hover {
-  text-decoration: underline;
-  color: #0f766e;
-}
-
-.doc-meta {
-  color: #64748b;
-  font-size: 12px;
-  margin: 0;
-}
-
-/* 相关主题样式 */
 .topics-container {
   display: flex;
   flex-wrap: wrap;
@@ -504,7 +473,6 @@ const refreshRelatedDocs = () => {
   transform: translateY(-1px);
 }
 
-/* 页脚样式 */
 .page-footer {
   margin-top: 40px;
   padding-top: 20px;
@@ -514,7 +482,6 @@ const refreshRelatedDocs = () => {
   color: #64748b;
 }
 
-/* 辅助样式 */
 .info-label {
   font-weight: 600;
   color: #1e293b;
@@ -528,5 +495,26 @@ const refreshRelatedDocs = () => {
   padding: 0 5px;
   cursor: pointer;
   font-size: 14px;
+}
+
+:deep(.collection-modal-overlay) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+}
+
+:deep(.collection-modal) {
+  background: white !important;
+  padding: 20px !important;
+  border-radius: 8px !important;
+  min-width: 500px !important;
+  z-index: 10000 !important;
 }
 </style>

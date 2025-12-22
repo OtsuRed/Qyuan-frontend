@@ -72,6 +72,34 @@ export const constRoutes = [
                 meta: { title: '期刊详情' }
             }
         ]
+    },{
+        path: '/patent',
+        name: 'patent',
+        component: () => import('@/views/patent/index.vue'),
+        redirect: '/patent/patent',
+        meta: { title: '专利查看' },
+        children: [
+            {
+                path: 'patent',
+                name: 'patentDetail',
+                component: () => import('@/views/patent/patent.vue'),
+                meta: { title: '专利详情' }
+            }
+        ]
+    },{
+        path: '/search',
+        name: 'search',
+        component: () => import('@/views/search/index.vue'), // 对应搜索页面的父组件
+        redirect: '/search/search', // 重定向到具体的搜索页面
+        meta: { title: '学术搜索' }, // 侧边栏/面包屑显示的标题
+        children: [
+            {
+                path: 'search',
+                name: 'searchDetail',
+                component: () => import('@/views/search/search.vue'), // 刚才编写的搜索页面组件
+                meta: { title: '文献检索' } // 子页面标题
+            }
+        ]
     }
-
 ]
+

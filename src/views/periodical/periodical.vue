@@ -10,33 +10,55 @@
 
     <!-- 主要内容区 -->
     <div class="main-content">
-      <!-- 左侧：期刊封面 -->
-      <div class="left-column">
-        <div class="journal-cover">
-          <img src="https://picsum.photos/300/400" alt="软件学报封面" class="cover-image">
-        </div>
-      </div>
-
       <!-- 右侧：期刊信息 -->
       <div class="right-column">
-        <!-- 期刊标题和操作按钮 -->
+        <!-- 期刊标题和操作按钮 - 修改按钮为在线阅读、收藏 -->
         <div class="journal-header">
           <h1 class="journal-title">
             软件学报
             <span class="award-tag">获奖刊</span>
           </h1>
           <div class="journal-actions">
-            <button class="btn subscribe-journal">期刊订阅</button>
-            <button class="btn feed-subscribe">
-              feed订阅
-              <i class="arrow-down"></i>
-            </button>
+            <button class="btn online-reading">在线阅读</button>
+            <!-- 核心修改：给收藏按钮绑定点击事件 -->
+            <button class="btn favorite" @click="collectJournal">收藏</button>
           </div>
         </div>
 
-        <!-- 期刊英文信息 -->
-        <div class="journal-english-info">
+        <!-- 期刊核心基础信息 - 整合主编、文献量、语种、ISSN、创刊年份 -->
+        <div class="journal-basic-info">
           <p>Journal of Software <span class="korean-title">연구소학보</span></p>
+          <div class="basic-info-list">
+            <div class="basic-info-item">
+              <span class="info-label">期刊链接：</span>
+              <a href="https://example.com/journal/software" target="_blank" rel="noopener noreferrer" class="info-value">https://example.com/journal/software</a>
+            </div>
+            <div class="basic-info-item">
+              <span class="info-label">DOAJ链接：</span>
+              <a href="https://doaj.org/toc/1000-9825" target="_blank" rel="noopener noreferrer" class="info-value">https://doaj.org/toc/1000-9825</a>
+            </div>
+            <!-- 整合的核心基础信息 -->
+            <div class="basic-info-item">
+              <span class="info-label">ISSN：</span>
+              <span class="info-value">1000-9825</span>
+            </div>
+            <div class="basic-info-item">
+              <span class="info-label">创刊年份：</span>
+              <span class="info-value">1990年</span>
+            </div>
+            <div class="basic-info-item">
+              <span class="info-label">主编：</span>
+              <span class="info-value">李明树</span>
+            </div>
+            <div class="basic-info-item">
+              <span class="info-label">语种：</span>
+              <span class="info-value">中文</span>
+            </div>
+            <div class="basic-info-item">
+              <span class="info-label">文献量：</span>
+              <span class="info-value">7026</span>
+            </div>
+          </div>
           <div class="journal-indexes">
             <span class="index-tag">CSCD核心(2025-2026)</span>
             <span class="index-tag">EI(2024)</span>
@@ -53,89 +75,69 @@
           </p>
         </div>
 
-        <!-- 两列信息布局 -->
-        <div class="two-column-info">
-          <div class="left-info">
-            <div class="journal-section">
-              <h2 class="section-title">获奖情况</h2>
-              <p class="section-content">
-                百种中国杰出学术期刊,1997年,<br>
-                《软件学报》荣获第二届全国优秀科技期刊三等奖; 1996年,《软件学报》荣获中国科学院优秀科技期刊二等奖; 1992年,《软件学报》获得北京科技期刊四通奖的编辑质量奖、期刊效益奖和办刊条件奖;
-              </p>
-            </div>
-
-            <div class="journal-metrics">
-              <div class="metric-item">
-                <span class="metric-label">影响因子:</span>
-                <span class="metric-value">2.99</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">被引量:</span>
-                <span class="metric-value">291930</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">下载量:</span>
-                <span class="metric-value">867570</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">基金论文量:</span>
-                <span class="metric-value">5515</span>
-              </div>
-              <div class="metric-item">
-                <span class="metric-label">邮政编码:</span>
-                <span class="metric-value">100190</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="right-info">
-            <div class="journal-details">
-              <div class="detail-item">
-                <span class="detail-label">主办单位:</span>
-                <span class="detail-value">中国科学院软件研究所 中国计算机学会</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">主编:</span>
-                <span class="detail-value">李明树</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">出版周期:</span>
-                <span class="detail-value">月刊</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">语种:</span>
-                <span class="detail-value">中文</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">国际刊号:</span>
-                <span class="detail-value">1000-9825</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">国内刊号:</span>
-                <span class="detail-value">11-2560/TP</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">文献量:</span>
-                <span class="detail-value">7026</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">电话:</span>
-                <span class="detail-value">010-62562563</span>
-              </div>
-              <div class="detail-item">
-                <span class="detail-label">地址:</span>
-                <span class="detail-value">北京8718信箱</span>
-              </div>
-            </div>
+        <!-- 关键词板块 -->
+        <div class="journal-section">
+          <h2 class="section-title">关键词</h2>
+          <div class="keyword-tags">
+            <span class="tag">计算机软件</span>
+            <span class="tag">软件工程</span>
+            <span class="tag">人工智能</span>
+            <span class="tag">程序设计</span>
+            <span class="tag">软件开发</span>
+            <span class="tag">系统软件</span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 新增：引入收藏夹弹窗组件 -->
+    <CollectionModal 
+      :visible="showCollectionModal" 
+      :initItem="currentCollectItem"
+      @close="showCollectionModal = false"
+    />
   </div>
 </template>
 
 <script setup>
-// 可以在这里添加交互逻辑
+import { ref } from 'vue';
+// 引入收藏夹弹窗组件（确认路径和实际项目一致）
+import CollectionModal from '@/views/components/CollectionModal/index.vue';
+
+// 控制收藏夹弹窗显示/隐藏
+const showCollectionModal = ref(false);
+// 存储当前要收藏的期刊信息
+const currentCollectItem = ref(null);
+
+// 收藏期刊的点击事件处理函数
+const collectJournal = () => {
+  // 调试日志
+  console.log('✅ 期刊收藏按钮被点击！');
+  
+  // 组装期刊核心信息（对应弹窗的journal分类）
+  currentCollectItem.value = {
+    type: 'journal', // 内容类型：期刊（和弹窗分类对应）
+    title: '软件学报', // 期刊标题
+    issn: '1000-9825', // 期刊ISSN
+    url: 'https://example.com/journal/software', // 期刊链接
+    founderYear: '1990年', // 创刊年份（扩展字段）
+    editor: '李明树', // 主编（扩展字段）
+    language: '中文', // 语种（扩展字段）
+    documentCount: '7026', // 文献量（扩展字段）
+    // 自动生成收藏时间
+    collectTime: new Date().toLocaleString('zh-CN', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/\//g, '-')
+  };
+  
+  // 打开收藏夹弹窗
+  showCollectionModal.value = true;
+  console.log('✅ 期刊收藏弹窗已打开，收藏信息：', currentCollectItem.value);
+};
 </script>
 
 <style scoped>
@@ -181,30 +183,13 @@
   gap: 30px;
 }
 
-/* 左侧封面区 */
-.left-column {
-  flex: 0 0 300px;
-}
-
-.journal-cover {
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  background-color: #fff;
-  padding: 15px;
-}
-
-.cover-image {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 /* 右侧信息区 */
 .right-column {
   flex: 1;
+  width: 100%;
 }
 
-/* 期刊标题和操作按钮 */
+/* 期刊标题和操作按钮 - 新按钮样式 */
 .journal-header {
   display: flex;
   justify-content: space-between;
@@ -247,37 +232,39 @@
   transition: all 0.2s;
 }
 
-.subscribe-journal {
-  background-color: #1a56db;
+/* 新增：提升收藏按钮层级，避免被遮挡 */
+.journal-actions .favorite {
+  position: relative;
+  z-index: 999 !important;
+}
+
+/* 在线阅读按钮样式 */
+.online-reading {
+  background-color: #2563eb;
   color: white;
 }
 
-.feed-subscribe {
-  background-color: #f5f5f5;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.arrow-down::after {
-  content: "▼";
-  font-size: 10px;
+/* 收藏按钮样式 */
+.favorite {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
 }
 
 .btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* 期刊英文信息 */
-.journal-english-info {
+/* 期刊核心基础信息 */
+.journal-basic-info {
   margin-bottom: 25px;
   padding-bottom: 15px;
   border-bottom: 1px solid #eee;
 }
 
-.journal-english-info p {
+.journal-basic-info p {
   font-size: 16px;
   color: #555;
   margin: 0 0 10px 0;
@@ -289,10 +276,45 @@
   color: #666;
 }
 
+/* 基础信息列表样式 - 适配更多项 */
+.basic-info-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.basic-info-item {
+  display: flex;
+  align-items: center;
+  /* 限制单项宽度，避免换行混乱 */
+  flex: 0 0 calc(33.33% - 10px);
+}
+
+.info-label {
+  color: #666;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.info-value {
+  color: #1a56db;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-value:hover {
+  text-decoration: underline;
+}
+
 .journal-indexes {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 10px;
 }
 
 .index-tag {
@@ -323,57 +345,41 @@
   line-height: 1.7;
 }
 
-/* 两列信息布局 */
-.two-column-info {
+/* 关键词标签样式 */
+.keyword-tags {
   display: flex;
-  gap: 30px;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.left-info, .right-info {
-  flex: 1;
+.tag {
+  background-color: #f0f7ff;
+  color: #1a56db;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 14px;
 }
 
-/* 左侧指标信息 */
-.journal-metrics {
-  margin-top: 25px;
+/* 收藏弹窗样式穿透（确保弹窗正常显示） */
+:deep(.collection-modal-overlay) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
 }
 
-.metric-item {
-  display: flex;
-  margin-bottom: 12px;
-  font-size: 15px;
-}
-
-.metric-label {
-  flex: 0 0 100px;
-  color: #666;
-}
-
-.metric-value {
-  color: #333;
-  font-weight: 500;
-}
-
-/* 右侧详细信息 */
-.journal-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detail-item {
-  display: flex;
-  font-size: 15px;
-}
-
-.detail-label {
-  flex: 0 0 100px;
-  color: #666;
-}
-
-.detail-value {
-  color: #333;
+:deep(.collection-modal) {
+  background: white !important;
+  padding: 20px !important;
+  border-radius: 8px !important;
+  min-width: 500px !important;
+  z-index: 10000 !important;
 }
 
 /* 响应式设计 */
@@ -382,21 +388,13 @@
     flex-direction: column;
   }
   
-  .left-column {
-    flex: none;
-    width: 100%;
-    max-width: 300px;
-    margin: 0 auto;
-  }
-  
-  .two-column-info {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
   .journal-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .basic-info-item {
+    flex: 0 0 100%;
   }
 }
 </style>

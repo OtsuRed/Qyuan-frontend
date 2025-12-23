@@ -1,0 +1,134 @@
+/* 浅色主题变量 (默认) */
+:root {
+    /* 主色调 */
+    --primary-color: #667eea;
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    /* 背景色 */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f7fa;
+    --bg-tertiary: #f8f9fa;
+    --bg-card: #ffffff;
+
+    /* 文字颜色 */
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --text-muted: #bdc3c7;
+
+    /* 边框颜色 */
+    --border-color: #e8e8e8;
+    --border-light: #f0f0f0;
+    --border-dark: #d9d9d9;
+
+    /* 阴影 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+
+    /* 状态色 */
+    --success-color: #52c41a;
+    --warning-color: #fa8c16;
+    --error-color: #ff4d4f;
+    --info-color: #1890ff;
+
+    /* 组件颜色 */
+    --input-bg: #ffffff;
+    --input-border: #e8e8e8;
+    --button-primary: var(--primary-gradient);
+    --button-secondary: #f5f5f5;
+
+    /* 卡片 */
+    --card-bg: #ffffff;
+    --card-border: #f0f0f0;
+
+    /* 导航栏 */
+    --nav-bg: #ffffff;
+    --nav-text: #333333;
+
+    /* 页脚 */
+    --footer-bg: #2c3e50;
+    --footer-text: #bdc3c7;
+}
+
+/* 深色主题变量 */
+[data-theme="dark"] {
+    /* 主色调 (保持原有的紫色渐变) */
+    --primary-color: #8a63d2;
+    --primary-gradient: linear-gradient(135deg, #8a63d2 0%, #a678d6 100%);
+
+    /* 背景色 (深色背景) */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3a3a3a;
+    --bg-card: #2d2d2d;
+
+    /* 文字颜色 (浅色文字) */
+    --text-primary: #f0f0f0;
+    --text-secondary: #cccccc;
+    --text-tertiary: #aaaaaa;
+    --text-muted: #888888;
+
+    /* 边框颜色 */
+    --border-color: #444444;
+    --border-light: #3a3a3a;
+    --border-dark: #555555;
+
+    /* 导航栏 */
+    --nav-bg: #2d2d2d;
+    --nav-text: #f0f0f0;
+
+    /* 阴影 (深色阴影) */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.5);
+
+    /* 状态色 (稍微调整对比度) */
+    --success-color: #73d13d;
+    --warning-color: #ffa940;
+    --error-color: #ff7875;
+    --info-color: #40a9ff;
+
+    /* 组件颜色 */
+    --input-bg: #3a3a3a;
+    --input-border: #555555;
+    --button-primary: var(--primary-gradient);
+    --button-secondary: #444444;
+
+    /* 卡片 */
+    --card-bg: #2d2d2d;
+    --card-border: #444444;
+
+    /* 导航栏 */
+    --nav-bg: #2d2d2d;
+    --nav-text: #f0f0f0;
+
+    /* 页脚 */
+    --footer-bg: #1a1a1a;
+    --footer-text: #aaaaaa;
+}
+
+/* 基础样式重置，使用CSS变量 */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 通用组件样式使用变量 */
+.card {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+    color: var(--text-primary);
+}
+
+.button {
+    background: var(--button-primary);
+    color: white;
+}
+
+.input {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--text-primary);
+}

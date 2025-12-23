@@ -1,0 +1,170 @@
+/* 添加深色主题需要的CSS变量 */
+.user-sidebar {
+ --sidebar-border-color: var(--border-color);
+ --avatar-border-color: var(--border-light);
+ --nav-hover-bg: var(--bg-tertiary);
+ --message-btn-bg: var(--button-secondary);
+ --message-btn-hover-bg: var(--border-light);
+}
+
+.user-sidebar {
+    flex: 0 0 280px;
+}
+
+.user-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 20px;
+    border: 1px solid var(--sidebar-border-color);
+}
+
+.avatar-section {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--sidebar-border-color);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--avatar-border-color);
+    margin-bottom: 16px;
+}
+
+.username {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.user-title {
+    color: var(--info-color);
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.user-institution {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* 导航菜单 */
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 4px;
+}
+
+.sidebar-nav button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s;
+}
+
+.sidebar-nav button:hover {
+    background: var(--nav-hover-bg);
+    color: var(--text-primary);
+}
+
+.sidebar-nav button.active {
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 500;
+}
+
+.sidebar-nav button i {
+    font-size: 18px;
+}
+
+/* 访客信息 */
+.visitor-info {
+    padding-top: 20px;
+    border-top: 1px solid var(--sidebar-border-color);
+}
+
+.stats-section {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+}
+
+.stat-number {
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--info-color);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.follow-btn, .message-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.follow-btn {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.follow-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+[data-theme="dark"] .follow-btn:hover {
+    box-shadow: 0 4px 12px rgba(138, 99, 210, 0.4);
+}
+
+.message-btn {
+    background: var(--message-btn-bg);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.message-btn:hover {
+    background: var(--message-btn-hover-bg);
+}

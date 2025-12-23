@@ -1,4 +1,3 @@
-
 <template>
   <div class="root-head">
     <div class="left">
@@ -28,16 +27,18 @@ import router from "@/routes/index.js";
   align-items: center;
   height: 35%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-primary);
 }
+
 .user {
-  border: 1px solid blue;
+  border: 1px solid var(--primary-color);
   width: 180px;
   height: 50px;
   display: flex;              /* 使用flex布局 */
   align-items: center;        /* 垂直居中 */
   padding: 0 10px;            /* 添加内边距 */
   box-sizing: border-box;     /* 包含边框和内边距 */
-  border-image: linear-gradient(45deg, #535bf2, #00ccff) 1;
+  border-image: linear-gradient(45deg, var(--primary-color), #00ccff) 1;
 }
 .username {
   font-size: 18px;
@@ -47,7 +48,7 @@ import router from "@/routes/index.js";
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: linear-gradient(45deg, #535bf2, #00ccff); /* 添加渐变背景 */
+  background: linear-gradient(45deg, var(--primary-color), #00ccff); /* 添加渐变背景 */
   -webkit-background-clip: text;                        /* 裁剪背景到文字 */
   background-clip: text;                                /* 标准语法 */
   -webkit-text-fill-color: transparent;                 /* 文字填充透明 */
@@ -76,7 +77,7 @@ import router from "@/routes/index.js";
 .head_text {
   margin: auto 30px;
   font-size: 20px;
-  color: #666;
+  color: var(--text-secondary);
   cursor: pointer;
   position: relative;
 }
@@ -88,7 +89,7 @@ import router from "@/routes/index.js";
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(45deg, #535bf2, #00ccff);
+  background: linear-gradient(45deg, var(--primary-color), #00ccff);
   transition: width 0.3s ease;
 }
 
@@ -101,6 +102,6 @@ import router from "@/routes/index.js";
   cursor: pointer;
   margin-right: 50px;
   width: 150px;
-  color: white;
+  color: var(--text-primary);
 }
 </style>

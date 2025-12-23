@@ -1,7 +1,7 @@
 import http from "./request.js";
 
 // 高亮相关 API
-http.defaults.baseURL = "/api/read_notes/light";
+const baseURL = "/read_notes/light";
 
 /**
  * 创建高亮
@@ -18,12 +18,11 @@ http.defaults.baseURL = "/api/read_notes/light";
  * @returns {Promise}
  */
 export const createHighlight = (data) => {
-  return 'aaa'
-  // return http({
-  //   url: `${baseURL}/createHighlight`,
-  //   method: "post",
-  //   data: data
-  // });
+  return http({
+    url: `${baseURL}/createHighlight`,
+    method: "post",
+    data: data
+  });
 };
 
 /**
@@ -34,7 +33,7 @@ export const createHighlight = (data) => {
  */
 export const getPaperHighlights = (paper_id, user_id = null) => {
   return http({
-    url: `/${paper_id}`,
+    url: `${baseURL}/${paper_id}`,
     method: "get",
   });
 };
@@ -46,8 +45,8 @@ export const getPaperHighlights = (paper_id, user_id = null) => {
  */
 export const deleteHighlight = (highlight_id) => {
   return http({
-    url: `${baseURL}/delete/${highlight_id}`,
-    method: "delete"
+    url: `${baseURL}/deleteHighlight/${highlight_id}`,
+    method: "post"
   });
 };
 

@@ -5,7 +5,7 @@
 
     <!-- 主页内容 -->
     <main class="home-container">
-      <!-- 搜索与标题 -->
+      <!-- 搜索区域 -->
       <section class="search-section">
         <div class="search-wrapper">
           <!-- 标题Logo -->
@@ -26,7 +26,7 @@
                     v-model="searchQuery"
                     type="text"
                     class="search-input"
-                    placeholder="搜索论文、项目、作者..."
+                    placeholder="搜索论文、专利、期刊..."
                     @keyup.enter="handleSearch"
                 />
                 <div class="search-icon" @click="handleSearch">
@@ -46,11 +46,11 @@
                       {{ filter.label }}
                     </button>
                   </div>
-                  <div class="advanced-search">
-                    <button class="advanced-btn" @click="showAdvancedSearch">
-                      高级搜索
-                    </button>
-                  </div>
+                </div>
+                <div>
+                  <button class="ai-filter-tab" @click="showAdvancedSearch">
+                    AI增强搜索
+                  </button>
                 </div>
               </div>
             </div>
@@ -73,7 +73,7 @@
         </div>
       </section>
 
-      <!-- 推荐内容 -->
+      <!-- 推荐区域 -->
       <section class="recommendations-section">
         <!-- 分类筛选 -->
         <div class="category-tabs">
@@ -274,39 +274,146 @@
       </section>
 
       <!-- 高级搜索模态框 -->
-      <!-- 见 temp -->
+      <div v-if="showAdvancedSearchModal" class="modal-overlay" @click="closeAdvancedSearch">
+        <div class="modal-content advanced-search-modal" @click.stop>
+          <div class="modal-header">
+            <h3>高级搜索</h3>
+            <button @click="closeAdvancedSearch" class="close-btn">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="advanced-search-form">
+              <div class="form-group">
+                <label for="title">标题包含</label>
+                <input
+                    id="title"
+                    v-model="advancedSearch.title"
+                    type="text"
+                    placeholder="论文或项目标题"
+                />
+              </div>
+              <div class="form-group">
+                <label for="author">作者</label>
+                <input
+                    id="author"
+                    v-model="advancedSearch.author"
+                    type="text"
+                    placeholder="作者姓名"
+                />
+              </div>
+              <div class="form-group">
+                <label for="keywords">关键词</label>
+                <input
+                    id="keywords"
+                    v-model="advancedSearch.keywords"
+                    type="text"
+                    placeholder="多个关键词用逗号分隔"
+                />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="startDate">开始日期</label>
+                  <input
+                      id="startDate"
+                      v-model="advancedSearch.startDate"
+                      type="date"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="endDate">结束日期</label>
+                  <input
+                      id="endDate"
+                      v-model="advancedSearch.endDate"
+                      type="date"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>文献类型</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-label">
+                    <input v-model="advancedSearch.types" type="checkbox" value="paper" />
+                    论文
+                  </label>
+                  <label class="checkbox-label">
+                    <input v-model="advancedSearch.types" type="checkbox" value="project" />
+                    项目
+                  </label>
+                  <label class="checkbox-label">
+                    <input v-model="advancedSearch.types" type="checkbox" value="patent" />
+                    专利
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="cancel-btn" @click="closeAdvancedSearch">取消</button>
+            <button class="search-btn" @click="performAdvancedSearch">搜索</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- 底部信息 -->
-    <Foot />
+    <footer class="home-footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>千源万码</h4>
+          <p>学术成果分享平台</p>
+          <p>让知识流动起来</p>
+        </div>
+        <div class="footer-section">
+          <h4>快速链接</h4>
+          <a href="/about">关于我们</a>
+          <a href="/help">帮助中心</a>
+          <a href="/contact">联系我们</a>
+        </div>
+        <div class="footer-section">
+          <h4>合作伙伴</h4>
+          <a href="/partners">高校合作</a>
+          <a href="/partners">企业合作</a>
+          <a href="/partners">机构合作</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2023 千源万码学术平台. 保留所有权利.</p>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script setup>
-// 导入样式表
 import '@/views/home/Home.styles.css';
-// 导入模拟数据
-import {
-  categories,
-  searchFilters,
-  hotSearchTags,
-  recommendedProjects,
-  recommendedAuthors,
-  recommendedPapers
-} from "@/views/home/mockData.js";
-// 导入其他模块
 import {ref, onMounted, watch, computed} from 'vue';
 import { useRouter } from 'vue-router';
 import Navigation from "@/views/components/Navigation.vue";
-import Foot from "@/views/components/Foot.vue";
 
 const router = useRouter();
 
 // 搜索相关数据
 const searchQuery = ref('');
-const activeFilter = ref('all');
+const activeFilter = ref('paper');
 const showAdvancedSearchModal = ref(false);
 const isLoading = ref(false);
+
+// 搜索筛选器
+const searchFilters = ref([
+  { label: '论文', value: 'paper' },
+  { label: '专利', value: 'patent' },
+  { label: '期刊', value: 'journal' },
+]);
+
+// 热门搜索标签
+const hotSearchTags = ref([
+  '机器学习',
+  '深度学习',
+  '人工智能',
+  '计算机视觉',
+  '自然语言处理',
+  '区块链',
+  '物联网',
+  '大数据'
+]);
 
 // 高级搜索表单数据
 const advancedSearch = ref({
@@ -320,74 +427,201 @@ const advancedSearch = ref({
 
 // 分类相关
 const activeCategory = ref('all');
+const categories = ref([
+  { id: 'all', name: '全部', count: 256 },
+  { id: 'ai', name: '人工智能', count: 78 },
+  { id: 'cs', name: '计算机科学', count: 64 },
+  { id: 'math', name: '数学', count: 42 },
+  { id: 'physics', name: '物理学', count: 36 },
+  { id: 'biology', name: '生物学', count: 28 },
+  { id: 'engineering', name: '工程学', count: 45 }
+]);
+
+// 模拟数据 - 推荐论文
+const recommendedPapers = ref([
+  {
+    id: 1,
+    title: '基于Transformer的视觉语言预训练模型研究',
+    abstract: '本文提出了一种新的视觉语言预训练模型，通过跨模态注意力机制实现图像和文本的深度融合...',
+    author: '张三',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=张三',
+    journal: '人工智能学报',
+    date: '2023-11-20',
+    views: 3245,
+    likes: 156,
+    tags: ['Transformer', '视觉语言', '预训练模型', '多模态'],
+    type: 'paper'
+  },
+  {
+    id: 2,
+    title: '联邦学习中的隐私保护机制研究',
+    abstract: '本文针对联邦学习中的数据隐私问题，提出了一种基于差分隐私的梯度保护机制...',
+    author: '李四',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=李四',
+    journal: '计算机研究与发展',
+    date: '2023-10-15',
+    views: 2876,
+    likes: 142,
+    tags: ['联邦学习', '隐私保护', '差分隐私', '机器学习'],
+    type: 'paper'
+  },
+  {
+    id: 3,
+    title: '量子计算在优化问题中的应用探索',
+    abstract: '本文研究了量子计算在解决复杂优化问题中的潜力，提出了基于量子退火的优化算法...',
+    author: '王五',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=王五',
+    journal: '科学通报',
+    date: '2023-09-28',
+    views: 2156,
+    likes: 98,
+    tags: ['量子计算', '优化算法', '量子退火', '计算复杂性'],
+    type: 'paper'
+  }
+]);
+
+// 模拟数据 - 推荐项目
+const recommendedProjects = ref([
+  {
+    id: 1,
+    name: 'DeepLearning-For-All',
+    description: '一个面向初学者的深度学习教程项目，包含从基础到实践的完整代码示例...',
+    author: 'AI实验室',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AI实验室',
+    language: 'Python',
+    stars: 2456,
+    forks: 589,
+    tags: ['深度学习', '教程', 'Python', 'PyTorch'],
+    type: 'project'
+  },
+  {
+    id: 2,
+    name: 'Blockchain-Security-Framework',
+    description: '区块链安全框架，提供智能合约安全审计、漏洞检测等功能...',
+    author: '安全研究组',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=安全研究组',
+    language: 'Solidity',
+    stars: 1876,
+    forks: 324,
+    tags: ['区块链', '安全', '智能合约', 'Solidity'],
+    type: 'project'
+  },
+  {
+    id: 3,
+    name: 'Medical-Image-Analysis',
+    description: '医学影像分析工具包，支持多种影像格式的处理和分析...',
+    author: '医疗AI团队',
+    authorAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=医疗AI团队',
+    language: 'Python',
+    stars: 1567,
+    forks: 287,
+    tags: ['医学影像', 'AI诊断', '图像处理', '医疗'],
+    type: 'project'
+  }
+]);
+
+// 模拟数据 - 推荐作者
+const recommendedAuthors = ref([
+  {
+    id: 1,
+    name: '张教授',
+    title: '教授',
+    institution: '清华大学',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=张教授',
+    papers: 45,
+    followers: 2345,
+    citations: 5678,
+    fields: ['人工智能', '机器学习', '计算机视觉'],
+    isFollowing: false
+  },
+  {
+    id: 2,
+    name: '李研究员',
+    title: '高级研究员',
+    institution: '中国科学院',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=李研究员',
+    papers: 32,
+    followers: 1876,
+    citations: 3456,
+    fields: ['数据科学', '大数据', '统计分析'],
+    isFollowing: true
+  },
+  {
+    id: 3,
+    name: '王博士',
+    title: '副教授',
+    institution: '北京大学',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=王博士',
+    papers: 28,
+    followers: 1567,
+    citations: 2890,
+    fields: ['自然语言处理', '知识图谱', '信息检索'],
+    isFollowing: false
+  }
+]);
 
 const isSearchQueryEmpty = computed(() => {
   return !searchQuery.value.toString().trim();
 })
 
-// 搜索框搜索
+// 方法定义
 const handleSearch = async () => {
   if (isSearchQueryEmpty.value) {
-    alert('请输入搜索关键词！');
+    console.log('搜索内容不能为空');
     return;
   }
 
   isLoading.value = true;
+  console.log('搜索:', searchQuery.value, '筛选:', activeFilter.value);
 
   try {
-    // 构建搜索参数
-    const searchParams = {
-      q: searchQuery.value.toString().trim(),
-      filter: activeFilter.value,
-      page: 1,
-      pageSize: 20
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 实际应调用后端API
+    // const response = await searchAPI({
+    //   query: searchQuery.value,
+    //   filter: activeFilter.value,
+    //   page: 1,
+    //   pageSize: 20
+    // });
+    const mockResponse = {
+      data: [
+        { id: 1, title: `搜索结果: ${searchQuery.value}` },
+        { id: 2, title: `相关: ${searchQuery.value}` }
+      ],
+      total: 100
     };
-    // 跳转到搜索页面
+
+    console.log('模拟API响应:', mockResponse);
+
+    // 跳转到搜索结果页
     router.push({
       path: '/search',
-      query: searchParams
+      query: {
+        q: searchQuery.value,
+        filter: activeFilter.value
+      }
     });
   } catch (error) {
     console.error('搜索失败:', error);
-    alert('搜索失败，请稍后重试');
   } finally {
     isLoading.value = false;
   }
 };
 
-// 标签搜索
-const searchByTag = (tag) => {
-  searchQuery.value = tag;
-  activeFilter.value = 'all';
-  router.push({
-    path: '/search',
-    query: {
-      q: tag,
-      filter: 'all',
-      page: 1,
-      pageSize: 20
-    }
-  });
-};
-
-// 设置筛选器
 const setActiveFilter = (filter) => {
   activeFilter.value = filter;
-  if (searchQuery.value.toString().trim()) {
-    router.push({
-      path: '/search',
-      query: {
-        q: searchQuery.value,
-        filter: filter,
-        page: 1
-      }
-    });
-  }
 };
 
-// 高级搜索
+const searchByTag = (tag) => {
+  searchQuery.value = tag;
+  handleSearch();
+};
+
 const showAdvancedSearch = () => {
-  showAdvancedSearchModal.value = true;
+
+  router.push('/aisearch')
 };
 
 const closeAdvancedSearch = () => {
@@ -456,5 +690,6 @@ onMounted(async () => {
   //   console.error('获取推荐数据失败:', error);
   // }
 });
-
 </script>
+
+

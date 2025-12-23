@@ -3,7 +3,7 @@ import axios from 'axios'
 const TokenKey = 'vue_admin_template_token'
 
 const http = axios.create({
-    baseURL: '/api/',
+    baseURL: '/ai/',
     timeout: 10000, // 超时时间
     headers: {
         'Content-Type': 'application/json'

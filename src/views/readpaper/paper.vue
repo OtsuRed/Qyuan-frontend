@@ -1,20 +1,22 @@
 <template>
   <div class="paper-detail-page">
     <div class="paper-title">
-      <h1>论文标题：这是一篇学术论文的示例标题</h1>
-      <p class="doi">DOI: 10.xxxx/j.cnki.xxxx.xxxx.xxxx</p>
-      <p class="paper-link">论文链接: <a href="https://example.com/paper" target="_blank" rel="noopener noreferrer">https://example.com/paper</a></p>
+      <h1>论文标题：{{paperDetail.data?.title}}</h1>
+      <p class="doi">{{ paperDetail.data?.doi }}</p>
+      <p class="paper-link">论文链接: <a :href='paperDetail.data?.url' target="_blank" rel="noopener noreferrer">{{ paperDetail.data?.url}}</a></p>
     </div>
 
     <div class="info-block author-info">
       <div class="info-content">
-        <p><span class="info-label">作者:</span> 作者1、作者2、作者3</p>
-        <p><span class="info-label">提交者:</span> 提交者信息1; 提交者信息2; 提交者信息3</p>
+        <p><span class="info-label">作者:&nbsp&nbsp</span>
+          <span v-for="author in paperDetail.data?.authors[1].slice(0,5)" :key="author.id">{{ author.fullName }}&nbsp&nbsp&nbsp  </span><span v-if="paperDetail.data?.authors[1].length > 5">等{{ paperDetail.data?.authors[1].length}}人</span>
+        </p>
+        <p><span class="info-label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp提交者:</span>&nbsp&nbsp{{ paperDetail.data?.submitter}}</p>
       </div>
     </div>
 
     <div class="action-buttons">
-      <button class="btn online-reading">在线阅读</button>
+      <button class="btn online-reading" @click="savePaperData">在线阅读</button>
       <button class="btn download">下载</button>
       <button class="btn favorite" @click="collectPaper">收藏</button>
       <button class="btn share">分享</button>
@@ -27,46 +29,44 @@
           <div class="section abstract-section">
             <h3 class="section-title">摘要</h3>
             <div class="section-content">
-              <p>论文摘要内容...（此处省略具体内容）这是一段示例摘要文本，用于展示摘要区域的显示效果。摘要通常概括了论文的主要内容、研究方法、重要发现和结论等关键信息。
-                <button class="toggle-btn" @click="showFullAbstract = !showFullAbstract">
+              <div class="section-content">
+                <math-jax :key="mathKey">
+                  <div class="abstract-text" :class="{'abstract-clamped': !showFullAbstract}">
+                    {{ paperDetail.data?.abstractText }}
+                  </div>
+                </math-jax>
+                <button class="toggle-btn" @click="toggleAbstract">
                   {{ showFullAbstract ? '收起' : '展开' }}
                 </button>
-              </p>
-            </div>
-          </div>
-
-          <div class="section keywords-section">
-            <h3 class="section-title">关键词</h3>
-            <div class="section-content">
-              <div class="keyword-tags">
-                <span class="tag">关键词1</span>
-                <span class="tag">关键词2</span>
-                <span class="tag">关键词3</span>
-                <span class="tag">关键词4</span>
               </div>
             </div>
           </div>
 
+<!--          <div class="section keywords-section">-->
+<!--            <h3 class="section-title">关键词</h3>-->
+<!--            <div class="section-content">-->
+<!--              <div class="keyword-tags">-->
+<!--                <span class="tag">关键词1</span>-->
+<!--                <span class="tag">关键词2</span>-->
+<!--                <span class="tag">关键词3</span>-->
+<!--                <span class="tag">关键词4</span>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
+
           <div class="section journal-section">
             <h3 class="section-title">期刊来源</h3>
             <div class="section-content">
-              <p><span class="info-label">期刊名称:</span> 计算机工程与应用</p>
+              <p><span class="info-label">期刊名称:</span> {{ paperDetail.data?.journalSource}}</p><span v-if="paperDetail.data?.journalSource===null">暂无</span>
             </div>
           </div>
 
           <div class="section publication-section">
             <h3 class="section-title">发表信息</h3>
             <div class="section-content">
-              <p><span class="info-label">论文发表日期:</span> 2025-06-15</p>
+              <p><span class="info-label">论文发表日期:</span>{{ paperDetail.data?.updated}}</p>
               <p><span class="info-label">在线出版日期:</span> 2025-06-20 (平台首次上网日期,不代表论文的发表时间)</p>
               <p><span class="info-label">页数:</span> 25 (10-35)</p>
-              <button class="toggle-english" @click="showEnglishInfo = !showEnglishInfo">
-                英文信息 {{ showEnglishInfo ? '收起' : '展开' }}
-              </button>
-              <div v-if="showEnglishInfo" class="english-info">
-                <p><span class="info-label">Title:</span> English title of the paper</p>
-                <p><span class="info-label">Authors:</span> Author 1, Author 2, Author 3</p>
-              </div>
             </div>
           </div>
         </div>
@@ -89,11 +89,12 @@
           </div>
           <div class="block-content">
             <ul class="reference-list">
-              <li class="reference-item">1. 作者. 文献标题[J]. 期刊名称, 年份, 卷(期):页码. DOI:xxxx.xxxx</li>
-              <li class="reference-item">2. 作者. 文献标题[J]. 期刊名称, 年份, 卷(期):页码.</li>
-              <li class="reference-item">3. 作者. 文献标题[M]. 出版社, 年份.</li>
-              <li class="reference-item">4. 作者. 文献标题[C]. 会议名称, 年份:页码.</li>
-              <li class="reference-item">5. 作者. 文献标题[P]. 专利号, 公开日期.</li>
+              <li v-for="ref in paperRefs " :key="ref.citationId" class="reference-item">
+                <a :href="ref.url" class="paper-link">{{ref.citedPaperTitle}}</a>
+                <p class="citation-count">引用次数:{{ref.beRefedCount}}
+                  <span>发表时间:{{formatDay(ref.createdAt)}}</span>
+                </p>
+              </li>
             </ul>
           </div>
         </div>
@@ -102,14 +103,7 @@
           <div class="block-header">论文类别</div>
           <div class="block-content">
             <div class="topics-container">
-              <a href="#" class="topic-tag">计算机科学</a>
-              <a href="#" class="topic-tag">人工智能</a>
-              <a href="#" class="topic-tag">机器学习</a>
-              <a href="#" class="topic-tag">数据挖掘</a>
-              <a href="#" class="topic-tag">深度学习</a>
-              <a href="#" class="topic-tag">自然语言处理</a>
-              <a href="#" class="topic-tag">计算机视觉</a>
-              <a href="#" class="topic-tag">大数据</a>
+              <a href="#" class="topic-tag">{{tag}}</a>
             </div>
           </div>
         </div>
@@ -121,11 +115,10 @@
       <p>万方数据知识服务平台提供技术支持</p>
     </footer>
 
-    <CollectionModal 
-      :visible="showCollectionModal" 
-      :initItem="currentCollectItem"
-      @close="showCollectionModal = false"
-    />
+<!--    <CollectionModal-->
+<!--      :visible="showCollectionModal"-->
+<!--      @close="showCollectionModal = false"-->
+<!--     :paper="currentCollectItem"/>-->
 
     <ClaimModal
       :visible="showClaimModal"
@@ -138,9 +131,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import CollectionModal from '@/views/components/CollectionModal/index.vue';
 import ClaimModal from '@/views/components/ClaimModal/index.vue';
+import {getPaperDetail, getPaperRef} from "@/api/paper.js";
+import {useRoute, useRouter} from "vue-router";
+import {usePaperStore} from "@/stores/paperStore.js";
+import router from "@/routes/index.js";
+import MathJax from "@/views/components/mathLex.vue";
+import {category} from "@/utils/storage.js";
+import {formatDay} from "@/utils/time.js";
 
 const showFullAbstract = ref(false);
 const showEnglishInfo = ref(false);
@@ -150,25 +150,45 @@ const sortType = ref('date');
 const showCollectionModal = ref(false);
 const currentCollectItem = ref(null);
 const showClaimModal = ref(false);
+const paperDetail = ref({});
+const paperRefs = ref([]);
+const paperCategory = ref(category);
+const tag=ref( '')
 
+const route = useRoute();
+const authors = ref([])
+onMounted( ()=>{
+  //获取params
+  getPaperDetail(route.query.paper_id).then(
+      data => {
+        paperDetail.value = data;
+        console.log(data);
+        authors.value = data.data.authors;
+        console.log(authors.value);
+       category.forEach(item=>{
+         if(item.id===data.data.categoryId){
+           tag.value=item.name
+         }
+       })
+      }
+  )
+  getPaperRef(route.query.paper_id).then(
+      data => {
+        paperRefs.value = data.data[1];
+        console.log(data.data[1]);
+      }
+  )
+})
 const collectPaper = () => {
-  console.log('✅ 收藏按钮被点击！');
-  
   currentCollectItem.value = {
-    type: 'paper',
+    id: 1,
     title: '这是一篇学术论文的示例标题',
+    authors: ['作者1', '作者2', '作者3'],
+    journal: '计算机工程与应用',
+    year: '2025',
     doi: '10.xxxx/j.cnki.xxxx.xxxx.xxxx',
-    url: 'https://example.com/paper',
-    collectTime: new Date().toLocaleString('zh-CN', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/\//g, '-')
+    url: 'https://example.com/paper'
   };
-  
-  showFullAbstract.value = false;
   showCollectionModal.value = true;
   console.log('✅ 收藏弹窗状态已设置为：', showCollectionModal.value);
   console.log('✅ 要收藏的论文信息：', currentCollectItem.value);
@@ -179,6 +199,24 @@ const handlePaperClaimSubmit = (submitData) => {
   alert('论文认领申请已提交，我们将在1-3个工作日内审核并回复您！');
   showClaimModal.value = false;
 };
+const savePaperData=()=>{
+  router.push(`/pdf?paper_id=${paperDetail.value.data.paperId}`)
+}
+const mathKey = computed(() => {
+  return `${paperDetail.value.data?.abstractText}_${showFullAbstract.value}`;
+});
+
+const toggleAbstract = () => {
+  showFullAbstract.value = !showFullAbstract.value;
+  // 等待 DOM 更新后重新渲染 MathJax
+  setTimeout(() => {
+    // 触发 MathJax 重新渲染
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise();
+    }
+  }, 100);
+};
+
 </script>
 
 <style scoped>
@@ -188,36 +226,37 @@ const handlePaperClaimSubmit = (submitData) => {
   padding: 20px;
   font-family: 'PingFang SC', sans-serif;
   line-height: 1.6;
-  color: #333;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 .paper-title {
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .paper-title h1 {
   font-size: 22px;
-  color: #1a56db;
+  color: var(--primary-color);
   margin-bottom: 10px;
   line-height: 1.4;
 }
 
 .doi {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
   margin-bottom: 5px;
 }
 
 .paper-link {
-  color: #2563eb;
+  color: var(--primary-color);
   font-size: 14px;
   text-decoration: none;
 }
 
 .paper-link a {
-  color: #2563eb;
+  color: var(--primary-color);
   text-decoration: none;
   margin-left: 5px;
 }
@@ -227,12 +266,12 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .info-block {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
   overflow: hidden;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-color);
 }
 
 .author-info .info-content {
@@ -248,9 +287,9 @@ const handlePaperClaimSubmit = (submitData) => {
   gap: 10px;
   margin-bottom: 20px;
   padding: 15px;
-  background: #f9f9f9;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color);
 }
 
 .btn {
@@ -267,7 +306,7 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .online-reading {
-  background-color: #2563eb;
+  background-color: var(--primary-color);
   color: white;
 }
 
@@ -277,9 +316,9 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .favorite, .share {
-  background-color: #f1f5f9;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .claim {
@@ -299,7 +338,7 @@ const handlePaperClaimSubmit = (submitData) => {
 .btn:hover {
   opacity: 0.95;
   transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .main-content {
@@ -322,7 +361,7 @@ const handlePaperClaimSubmit = (submitData) => {
 .section {
   margin-bottom: 25px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .section:last-child {
@@ -335,7 +374,7 @@ const handlePaperClaimSubmit = (submitData) => {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 10px;
-  color: #1e40af;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
 }
@@ -345,13 +384,13 @@ const handlePaperClaimSubmit = (submitData) => {
   display: inline-block;
   width: 4px;
   height: 16px;
-  background-color: #3b82f6;
+  background-color: var(--primary-color);
   margin-right: 8px;
   border-radius: 2px;
 }
 
 .section-content {
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -362,8 +401,8 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .tag {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--bg-tertiary);
+  color: var(--primary-color);
   padding: 5px 12px;
   border-radius: 15px;
   font-size: 14px;
@@ -371,7 +410,7 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .toggle-english {
-  color: #2563eb;
+  color: var(--primary-color);
   background: none;
   border: none;
   padding: 5px 0;
@@ -387,15 +426,15 @@ const handlePaperClaimSubmit = (submitData) => {
 .english-info {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px dashed #e0e7ff;
+  border-top: 1px dashed var(--border-color);
 }
 
 .block-header {
-  background: #eff6ff;
+  background: var(--bg-tertiary);
   padding: 12px 15px;
   font-weight: 600;
-  color: #1e40af;
-  border-bottom: 1px solid #dbeafe;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -405,6 +444,7 @@ const handlePaperClaimSubmit = (submitData) => {
 
 .block-content {
   padding: 15px;
+  color: var(--text-secondary);
 }
 
 .references-block .block-content {
@@ -423,18 +463,20 @@ const handlePaperClaimSubmit = (submitData) => {
   display: flex;
   align-items: center;
   gap: 5px;
+  color: var(--text-secondary);
 }
 
 .sort-select {
   padding: 3px 8px;
-  border: 1px solid #94a3b8;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 13px;
-  background-color: white;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .network-btn {
-  color: #2563eb;
+  color: var(--primary-color);
   background: none;
   border: none;
   cursor: pointer;
@@ -445,9 +487,9 @@ const handlePaperClaimSubmit = (submitData) => {
 
 .reference-item {
   padding: 10px 0;
-  border-bottom: 1px dashed #e2e8f0;
+  border-bottom: 1px dashed var(--border-color);
   font-size: 14px;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .topics-container {
@@ -457,39 +499,39 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 .topic-tag {
-  background: #f0f9ff;
-  color: #0369a1;
+  background: var(--bg-tertiary);
+  color: var(--primary-color);
   padding: 5px 12px;
   border-radius: 4px;
   font-size: 13px;
   text-decoration: none;
   transition: all 0.2s;
-  border: 1px solid #bae6fd;
+  border: 1px solid var(--border-color);
 }
 
 .topic-tag:hover {
-  background: #e0f2fe;
-  color: #0284c7;
+  background: var(--bg-secondary);
+  color: var(--primary-color);
   transform: translateY(-1px);
 }
 
 .page-footer {
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--border-color);
   text-align: center;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-tertiary);
 }
 
 .info-label {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-right: 5px;
 }
 
 .toggle-btn {
-  color: #2563eb;
+  color: var(--primary-color);
   background: none;
   border: none;
   padding: 0 5px;
@@ -511,10 +553,31 @@ const handlePaperClaimSubmit = (submitData) => {
 }
 
 :deep(.collection-modal) {
-  background: white !important;
+  background: var(--bg-card) !important;
   padding: 20px !important;
   border-radius: 8px !important;
   min-width: 500px !important;
   z-index: 10000 !important;
+  color: var(--text-primary) !important;
+}
+.abstract-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:deep(.collection-modal-overlay) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
 }
 </style>

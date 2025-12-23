@@ -1,14 +1,14 @@
 <script setup>
 
+import Head from "@/views/components/Head.vue";
 
-import Navigation from "@/views/components/Navigation.vue";
 import paper from "@/views/readpaper/paper.vue";
+import Navigation from "@/views/components/Navigation.vue";
 
 </script>
 
-<template>  
+<template>
   <div>
-    
     <Navigation/>
     <!--    <h1>这是一个论文查看页面</h1>-->
     <!--    <router-view></router-view>-->

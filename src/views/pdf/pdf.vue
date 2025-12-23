@@ -30,22 +30,81 @@
         </div>
       </div>
 
-      <!-- 右侧评论栏 -->
-      <div class="note-panel">
-        <div class="note-header">
-          <h2>📒 笔记列表</h2>
-          <button class="add-note-btn" @click="() => {}">＋ 添加笔记</button>
+      <!-- 右侧选项卡面板 -->
+      <div class="tab-panel">
+        <!-- 选项卡头部 -->
+        <div class="tab-header">
+          <div 
+            class="tab-item" 
+            :class="{ active: activeTab === 'notes' }"
+            @click="activeTab = 'notes'"
+          >
+            笔记列表
+          </div>
+          <div 
+            class="tab-item" 
+            :class="{ active: activeTab === 'ai' }"
+            @click="activeTab = 'ai'"
+          >
+            AI问答
+          </div>
         </div>
 
-        <div class="note-list">
-          <div v-for="i in 3" :key="i" class="note-item">
-            <div class="note-title">示例笔记 {{ i }}</div>
-            <div class="note-content">这里是笔记内容，可以记录阅读心得、引用、或备注。</div>
-            <div class="note-footer">
-              <span class="note-date">2025-11-23</span>
-              <button class="note-delete">删除</button>
+        <!-- 选项卡内容区 -->
+        <div class="tab-content">
+          <!-- 笔记列表 -->
+          <div v-show="activeTab === 'notes'" class="tab-pane">
+            <div class="note-header">
+              <h2>📒 笔记</h2>
+              <button class="add-note-btn" @click="addNote">＋ 添加笔记</button>
+            </div>
+
+            <div class="note-list">
+              <div v-for="note in notes" :key="note.id" class="note-item">
+                <!-- 标题编辑 -->
+                <div v-if="note.editingTitle" class="note-title-editing">
+                  <input
+                      v-model="note.tempTitle"
+                      @keyup.enter="saveNoteTitle(note)"
+                      @blur="saveNoteTitle(note)"
+                      @keyup.esc="cancelEditTitle(note)"
+                      class="title-input"
+                      ref="titleInputs"
+                      autofocus
+                  />
+                </div>
+                <div v-else class="note-title" @dblclick="startEditTitle(note)">
+                  {{ note.noteTitle || '无标题' }}
+                </div>
+
+                <!-- 内容编辑 -->
+                <div v-if="note.editingContent" class="note-content-editing">
+            <textarea
+                v-model="note.tempContent"
+                @keyup.ctrl.enter="saveNoteContent(note)"
+                @blur="saveNoteContent(note)"
+                @keyup.esc="cancelEditContent(note)"
+                class="content-textarea"
+                ref="contentInputs"
+                autofocus
+                rows="3"
+            ></textarea>
+                </div>
+                <div v-else class="note-content" @dblclick="startEditContent(note)">
+                  {{ note.noteContent || '无内容' }}
+                </div>
+
+                <div class="note-footer">
+                  <span class="note-date">{{ formatTime(note.createAt) }}</span>
+                  <button class="note-delete" @click="deleteNote(note)">删除</button>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- AI问答列表 -->
+          <AIpaper v-if="activeTab === 'ai'" class="tab-pane">
+          </AIpaper>
         </div>
       </div>
     </div>
@@ -73,7 +132,7 @@
 
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import {ref, reactive, onMounted, nextTick, onBeforeUnmount, defineProps, onUnmounted} from 'vue'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url'
 import { 
@@ -81,12 +140,19 @@ import {
   getPaperHighlights, 
   deleteHighlight,
   clearPaperHighlights,
-  getPaperIdByUrl
 } from '@/api/highlight.js'
+import { addNotes, getNotes, updateNotes, deleteNotes } from '@/api/note.js'
 import { getUser } from '@/utils/storage.js'
+import {createReadRecord, getReadRecord, updateReadRecord} from "@/api/paper_read.js";
+import AIpaper from "@/views/pdf/AIpaper.vue";
+import {usePaperStore} from "@/stores/paperStore.js";
+import {useRoute, useRouter} from "vue-router";
+
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+// 简单定义方式
 
+const props = defineProps(['paper'])
 const scrollContainer = ref(null)
 const canvasRefs = ref([])
 const textLayerRefs = ref([])
@@ -98,32 +164,318 @@ const highlights = ref([]) // 存储所有高亮数据
 const hasSelection = ref(false) // 是否有选中的文字
 const currentSelection = ref(null) // 当前选中的文字信息
 const currentPDFFile = ref(null) // 当前PDF文件信息
-const currentPaperId = ref(null) // 当前论文ID（关联paper表）
-const currentPaperTitle = ref('') // 当前论文标题
+const currentPaperId = ref(1) // 当前论文ID（关联paper表）
+const currentPaperTitle = ref('test title') // 当前论文标题
+const currentPaperAuthor = ref('test auther')
+const currentPaperAbstract = ref('test abstract')
+const currentPaperPageCount = ref(1)
 const currentPDFUrl = ref('') // 当前PDF文件URL（用于查找paper_id）
 const viewportInfo = ref(null) // 当前viewport信息，用于保存高亮位置
 const showFloatButton=ref(false)
 // 新增：浮动按钮显示状态和位置
 const showColor = ref(false)
 const floatingBtnPos = reactive({ x: 0, y: 0 })
+const scrollPercentage = ref(0);
+const readRecord = ref(null)
+const activeTab = ref('notes')
+const router = useRouter()
+const route = useRoute()
 const highlightColors = [
-  '#92cbfe', // rgb(99,181,254)
-  '#f4cf88', // rgb(239,187,85)
-  '#ab9cf5', // rgb(135,114,241)
-  '#f19fc4', // rgb(235,118,170)
-  '#31BC8F'  // rgb(49,188,143)
+  '#b0d9fe', // 原 #92cbfe → 30%淡化，更明显的蓝色
+  '#f7deaf', // 原 #f4cf88 → 30%淡化，更明显的橙色
+  '#c4baf8', // 原 #ab9cf5 → 30%淡化，更明显的紫色
+  '#f4c0da', // 原 #f19fc4 → 30%淡化，更明显的粉色
+  '#71d0b2'  // 原 #31BC8F → 30%淡化，更明显的绿色
 ]
+const notes = ref([])
+const titleInputs = ref([])
+const contentInputs = ref([])
+const init = ()=>{
+  currentPaperId.value = route.query.paper_id
+  getNotes(currentPaperId.value).then(res=>{
+    res.data.forEach(note=>{
+      notes.value.push(note)
+    })
+  })
+  getPaperHighlights(currentPaperId.value).then(res=>{
+    res.data.forEach(highlight=>{
+      highlights.value.push(highlight)
+    })
+  })
+  getReadRecord(currentPaperId.value).then(
+      res=>{
+        if(res.data){
+          readRecord.value = res.data
+        }else{
+          const record={
+            paperId: currentPaperId.value,
+            paperTitle: currentPaperTitle.value,
+            firstAuthor: currentPaperAuthor.value,
+            abstract: currentPaperAbstract.value,
+          }
+          createReadRecord(record).then(res=>{
+            readRecord.value = res.data
+          })
+
+        }
+      }
+  )
+}
+init()
+let debounceTimer = null;
+const DEBOUNCE_DELAY = 1000; // 滚动停止1秒后保存
+
+onMounted(async () => {
+  if (scrollContainer.value) {
+    scrollContainer.value.addEventListener('scroll', debouncedCalculateAndSave);
+  }
+  // 监听文字选择事件
+  document.addEventListener('selectionchange', handleSelection);
+// 使用代理路径
+  const proxyPath = '/obs-proxy/0704/0704.0010.pdf';
+
+  // 获取预签名URL的参数
+  const presignedUrl = 'https://bucket-pdf-74a6.obs.cn-north-4.myhuaweicloud.com/0704/0704.0010.pdf?AccessKeyId=HPUAE1MAHBIWWPY6YXFT&Expires=1766491576&Signature=BcBcpG7kM%2FrqI6n3vclFhSmt5DE%3D';
+  const urlObj = new URL(presignedUrl);
+  const searchParams = urlObj.search;
+
+  // 构建代理URL（包含查询参数）
+  const proxyUrl = `${proxyPath}${searchParams}`;
+
+    const response = await fetch(proxyUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/pdf, */*'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const fileBlob = await response.blob();
+    currentPDFFile.value = fileBlob;
+    const arrayBuffer = await fileBlob.arrayBuffer();
+    pageCanvases.length = 0;
+
+    await renderPDF(arrayBuffer).then(() => {
+      loadPaperHighlights();
+    })
+  props.paper=usePaperStore().getPaper()
+});
+
+
+onUnmounted(() => {
+  if (scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', debouncedCalculateAndSave);
+  }
+  document.removeEventListener('selectionchange', handleSelection);
+
+  // 清理防抖定时器
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+});
+
+// 防抖函数
+const debouncedCalculateAndSave = () => {
+  // 先立即计算百分比（用于UI显示）
+  calculateScrollPercentage();
+
+  // 清除之前的定时器
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+  }
+
+  // 设置新的定时器
+  debounceTimer = setTimeout(() => {
+    saveReadRecord();
+  }, DEBOUNCE_DELAY);
+};
+
+// 保存阅读记录
+const saveReadRecord = () => {
+  if (!readRecord.value?.recordId) return;
+
+  const data = {
+    scrollPosition: scrollPercentage.value,
+    pageNumber: Math.round(currentPaperPageCount.value * scrollPercentage.value),
+  };
+
+  updateReadRecord(data, readRecord.value.recordId)
+      .then(() => {
+        console.log('阅读记录已保存');
+      })
+      .catch(error => {
+        console.error('保存失败:', error);
+      });
+};
+
+const calculateScrollPercentage = () => {
+  const container = scrollContainer.value;
+  if (!container) return;
+
+  const scrollTop = container.scrollTop;
+  const scrollHeight = container.scrollHeight;
+  const clientHeight = container.clientHeight;
+
+  // 计算滚动百分比
+  const percentage = (scrollTop / (scrollHeight - clientHeight));
+  scrollPercentage.value = isNaN(percentage) ? 0 : percentage;
+};
+
+const scrollToPercentage = (percentage) => {
+  if (!scrollContainer.value) return;
+
+  const container = scrollContainer.value;
+  const scrollHeight = container.scrollHeight - container.clientHeight;
+  const scrollTop = scrollHeight * percentage;
+
+  container.scrollTop = scrollTop;
+};
+// 开始编辑标题
+const startEditTitle = (note) => {
+  note.editingTitle = true
+  note.tempTitle = note.noteTitle || ''
+
+  // 等待DOM更新后聚焦
+  nextTick(() => {
+    const index = notes.value.findIndex(n => n.id === note.id)
+    if (titleInputs.value[index]) {
+      titleInputs.value[index].focus()
+      // 选中所有文本
+      titleInputs.value[index].select()
+    }
+  })
+}
+
+// 保存标题
+const saveNoteTitle = async (note) => {
+  if (note.tempTitle.trim() === '') {
+    note.tempTitle = '无标题'
+  }
+
+  note.noteTitle = note.tempTitle.trim()
+  note.editingTitle = false
+
+  // 这里可以调用API保存到后端
+  try {
+    await saveNoteToBackend(note)
+  } catch (error) {
+    console.error('保存失败:', error)
+    // 可以添加错误提示
+  }
+}
+
+// 取消编辑标题
+const cancelEditTitle = (note) => {
+  note.editingTitle = false
+  note.tempTitle = ''
+}
+
+// 开始编辑内容
+const startEditContent = (note) => {
+  note.editingContent = true
+  note.tempContent = note.noteContent || ''
+
+  nextTick(() => {
+    const index = notes.value.findIndex(n => n.id === note.id)
+    if (contentInputs.value[index]) {
+      contentInputs.value[index].focus()
+      // 将光标移动到末尾
+      contentInputs.value[index].setSelectionRange(
+          note.tempContent.length,
+          note.tempContent.length
+      )
+    }
+  })
+}
+
+// 保存内容
+const saveNoteContent = async (note) => {
+  note.noteContent = note.tempContent.trim()
+  note.editingContent = false
+
+  // 调用API保存
+  try {
+    await saveNoteToBackend(note)
+  } catch (error) {
+    console.error('保存失败:', error)
+  }
+}
+
+// 取消编辑内容
+const cancelEditContent = (note) => {
+  note.editingContent = false
+  note.tempContent = ''
+}
+
+// 保存到后端的函数
+const saveNoteToBackend = async (note) => {
+  // 这里调用你的API
+  const response = await updateNotes(
+      {
+        id: note.id,
+        noteTitle: note.noteTitle,
+        noteContent: note.noteContent
+      }
+  )
+
+  if (!response.ok) {
+    throw new Error('保存失败')
+  }
+
+  return await response.json()
+}
+
+// 添加新笔记
+
+// 删除笔记
+const deleteNote = async (note) => {
+
+  try {
+      await deleteNotes({id: note.id})
+      notes.value = notes.value.filter(n => n.id !== note.id)
+  } catch (error) {
+    console.error('删除失败:', error)
+    alert('删除失败，请重试')
+  }
+}
+const addNote = async () => {
+
+    await addNotes({paperId: currentPaperId.value}).then(response=>{
+      notes.value.push(response.data)
+      // 新建后自动聚焦到标题输入框
+      nextTick(() => {
+        if (titleInputs.value[0]) {
+          titleInputs.value[0].focus()
+          titleInputs.value[0].select()
+        }
+      })
+    })
+};
+const editNoteTitle = async (note) => {
+
+};
+const formatTime = (time) => {
+  if (!time) return ''
+
+  const date = new Date(time)
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
 const selectHighLight=()=>{
   showColor.value = true
   showFloatButton.value = false
 }
-onMounted(() => {
-  scrollContainer.value.addEventListener('scroll', () => {
-  })
 
-  // 监听文字选择事件
-  document.addEventListener('selectionchange', (e)=>{handleSelection(e)})
-})
 
 // 监听鼠标抬起事件，显示浮动按钮
 document.addEventListener('mouseup', (e) => {
@@ -174,7 +526,7 @@ const renderPDF = async (arrayBuffer) => {
   
   const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise
   const numPages = pdf.numPages
-
+  currentPaperPageCount.value = numPages
   // 先创建占位
   for (let i = 0; i < numPages; i++) {
     pageCanvases.push(null)
@@ -310,7 +662,10 @@ const renderPDF = async (arrayBuffer) => {
   
   // 重新渲染所有高亮
   await nextTick()
-  renderAllHighlights()
+
+  scrollToPercentage(readRecord.value.scrollPosition)
+
+  // renderAllHighlights()
 }
 
 // 文件选择
@@ -327,12 +682,14 @@ const onFileChange = async (event) => {
   pageCanvases.length = 0
   highlights.value = [] // 清除高亮
   
-  await renderPDF(arrayBuffer)
+  await renderPDF(arrayBuffer).then(
+      () => {
+        // 获取论文高亮
+        loadPaperHighlights()
+      }
+  )
   
-  // 如果有paper_id，加载该论文的高亮
-  if (currentPaperId.value) {
-    await loadPaperHighlights()
-  }
+
 }
 
 // 设置当前论文信息（从外部调用，比如从论文列表页面打开PDF时）
@@ -341,40 +698,29 @@ const setPaperInfo = (paperId, paperTitle = '', pdfUrl = '') => {
   currentPaperTitle.value = paperTitle
   currentPDFUrl.value = pdfUrl
   // 如果PDF已加载，重新加载高亮
-  if (pageCanvases.length > 0) {
-    loadPaperHighlights()
-  }
+
 }
 
 // 从后端加载论文的高亮
 const loadPaperHighlights = async () => {
-  if (!currentPaperId.value) {
-    console.log('论文ID不存在，跳过加载高亮')
-    return
-  }
-  
-  const user = getUser()
-  if (!user || !user.id) {
-    console.log('用户未登录，跳过加载高亮')
-    return
-  }
-  
+
   try {
-    const response = await getPaperHighlights(currentPaperId.value, user.id)
-    const serverHighlights = response.data || response || []
-    
+    const response = await getPaperHighlights(currentPaperId.value)
+    console.log('已获取论文高亮:', response)
+    const serverHighlights = response.data
+
     // 转换后端数据格式为前端格式
     highlights.value = serverHighlights.map(h => ({
       id: h.id,
-      pageIndex: h.page_index,
-      text: h.highlighted_text,
-      rects: h.position_data?.rects || [],
+      pageIndex: h.pageIndex,
+      text: h.highlightedText,
+      rects: JSON.parse(h.positionData).rects,
       color: h.color || '#fdd581',
       opacity: h.opacity || 1,
       createdAt: h.created_at,
       ...h
     }))
-    
+
     // 渲染所有高亮
     renderAllHighlights()
     
@@ -493,8 +839,8 @@ const addHighlight = async (color = '#fdd581') => {
     
     // 准备保存到后端的数据
     const highlightData = {
-      userId: user?.id || null,
-      paperId: currentPaperId.value,
+      userId: user?.id || 1,
+      paperId: currentPaperId.value || 1,
       paperTitle: currentPaperTitle.value || null,
       pageIndex: currentSelection.value.pageIndex,
       highlightedText: currentSelection.value.text,
@@ -506,7 +852,7 @@ const addHighlight = async (color = '#fdd581') => {
     
     // 调用API保存到后端
     const response = await createHighlight(highlightData)
-    
+    console.log('已保存高亮:', response)
     // 创建本地高亮对象（包含后端返回的ID）
     const highlight = {
       id: response.data?.id || Date.now() + Math.random(),
@@ -537,6 +883,7 @@ const addHighlight = async (color = '#fdd581') => {
 
 // 渲染单个高亮
 const renderHighlight = (highlight) => {
+  console.log('渲染高亮:', highlight)
   const highlightLayer = highlightLayers.value[highlight.pageIndex]
   if (!highlightLayer) return
   
@@ -548,7 +895,7 @@ const renderHighlight = (highlight) => {
     highlightEl.style.width = `${rect.width}px`
     highlightEl.style.height = `${rect.height-5}px`
     highlightEl.style.backgroundColor = highlight.color
-    highlightEl.style.opacity = '0.5'
+    highlightEl.style.opacity = '1'
     highlightEl.style.pointerEvents = 'auto'
     highlightEl.style.zIndex = '1500'
     highlightEl.style.cursor = 'pointer'
@@ -570,7 +917,7 @@ const handleHighlightDoubleClick = (highlight) => {
 const deleteHighlightById = async (highlightId) => {
   try {
     // 从后端删除
-    // await deleteHighlight(highlightId)
+    await deleteHighlight(highlightId)
     console.log("后端删除")
     // 从本地数据中移除
     const index = highlights.value.findIndex(h => h.id === highlightId)
@@ -643,6 +990,8 @@ const renderAllHighlights = () => {
     renderHighlight(highlight)
   })
 }
+
+// 添加笔记
 
 
 // 导出函数供外部调用
@@ -888,23 +1237,66 @@ canvas {
   align-items: center;
 }
 
-/* 右侧笔记栏 */
-.note-panel {
+/* 右侧选项卡面板 */
+.tab-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #fffefc;
+  background-color: #fff;
   border-left: 1px solid #ddd;
-  padding: 16px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
+/* 选项卡头部 */
+.tab-header {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  background-color: #f5f5f5;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: 500;
+  color: #666;
+}
+
+.tab-item:hover {
+  background-color: #e0e0e0;
+}
+
+.tab-item.active {
+  background-color: #fff;
+  color: #333;
+  border-bottom: 3px solid #2196F3;
+}
+
+/* 选项卡内容区 */
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tab-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 笔记样式 */
 .note-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 2px solid #eee;
-  padding-bottom: 8px;
+  padding: 12px 16px;
   margin-bottom: 12px;
 }
 
@@ -913,8 +1305,8 @@ canvas {
   margin: 0;
 }
 
-.add-note-btn {
-  background-color: #4caf50;
+.add-note-btn, .add-ai-btn {
+  background-color: #2196F3;
   border: none;
   color: white;
   border-radius: 6px;
@@ -923,40 +1315,103 @@ canvas {
   font-size: 14px;
 }
 
-.add-note-btn:hover {
-  background-color: #43a047;
+.add-note-btn:hover, .add-ai-btn:hover {
+  background-color: #2196F3;
 }
 
-/* 笔记项 */
 .note-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  gap: 16px;
+  padding: 0 16px 16px;
+  overflow-y: auto;
 }
 
 .note-item {
-  background-color: #f9f9f9;
+  background: white;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 10px 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
 .note-item:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
 }
 
 .note-title {
+  font-size: 18px;
   font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   color: #333;
+  cursor: text;
+  min-height: 28px;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.note-title:hover {
+  background-color: #f5f5f5;
+}
+
+.note-title-editing {
+  margin-bottom: 8px;
+}
+
+.title-input {
+  width: 100%;
+  padding: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  border: 2px solid #2196F3;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.title-input:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .note-content {
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  cursor: text;
+  min-height: 60px;
+  padding: 8px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-content:hover {
+  background-color: #f5f5f5;
+}
+
+.note-content-editing {
+  margin-bottom: 12px;
+}
+
+.content-textarea {
+  width: 100%;
+  padding: 12px;
   font-size: 14px;
-  color: #555;
-  margin-bottom: 8px;
+  border: 2px solid #4CAF50;
+  border-radius: 4px;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.content-textarea:focus {
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .note-footer {
@@ -964,18 +1419,24 @@ canvas {
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  color: #888;
+  color: #999;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
 }
 
 .note-delete {
-  background: none;
+  padding: 4px 12px;
+  background-color: #ff4444;
+  color: white;
   border: none;
-  color: #d32f2f;
+  border-radius: 4px;
   cursor: pointer;
+  font-size: 12px;
 }
 
 .note-delete:hover {
-  text-decoration: underline;
+  background-color: #cc0000;
 }
+
 
 </style>

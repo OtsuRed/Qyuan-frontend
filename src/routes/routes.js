@@ -53,6 +53,11 @@ export const constRoutes = [
         component: () => import('@/views/search/Search.vue'),
         meta: {title: 'search'},
     },{
+    path: '/aisearch',
+        name: 'aisearch',
+        component: () => import('@/views/search/AIsearch.vue'),
+        meta: {title: 'aiSearch'},
+    },{
         path: '/readpaper',
         name: 'readpaper',
         component: () => import('@/views/readpaper/index.vue'),
@@ -108,6 +113,43 @@ export const constRoutes = [
                 name: 'searchDetail',
                 component: () => import('@/views/search/search.vue'), // 刚才编写的搜索页面组件
                 meta: { title: '文献检索' } // 子页面标题
+            }
+        ]
+    },
+    {
+        path: '/message',
+        name: 'message',
+        component: () => import('@/views/message/message.vue'),
+        redirect: '/message/list',
+        meta: { title: '消息中心' },
+        children: [
+            {
+                path: 'list',
+                name: 'messageList',
+                component: () => import('@/views/message/list.vue'),
+                meta: { title: '消息列表' }
+            }
+        ]
+    },
+    {
+        path: '/audit',
+        name: 'audit',
+        component: () => import('@/views/audit/index.vue'),
+        redirect: '/audit/reports',
+        children: [
+            {
+                path: 'reports',
+                name: 'AuditReports',
+                component: () => import('@/views/audit/report.vue')
+            },
+            {
+                path: 'claims',
+                name: 'AuditClaims',
+                component: () => import('@/views/audit/claim.vue')
+            },
+            {
+                path: '',
+                redirect: '/audit/reports'
             }
         ]
     }

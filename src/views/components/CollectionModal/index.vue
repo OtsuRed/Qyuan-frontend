@@ -1,67 +1,116 @@
 <template>
-  <!-- 收藏夹弹窗遮罩层 -->
-  <div v-if="visible" class="collection-modal-overlay" @click.self="handleClose">
-    <!-- 弹窗主体 -->
-    <div class="collection-modal">
+  <!-- 收藏操作按钮（可放在论文卡片或详情页） -->
+  <button
+      v-if="!isInCollection"
+      class="collect-btn"
+      @click="showCollectionPanel = true"
+  >
+    收藏
+  </button>
+  <button
+      v-else
+      class="collected-btn"
+      @click="showCollectionPanel = true"
+  >
+    已收藏
+  </button>
+
+  <!-- 收藏面板弹窗 -->
+  <div v-if="showCollectionPanel" class="collection-panel-overlay" @click.self="closePanel">
+    <div class="collection-panel">
       <!-- 弹窗头部 -->
-      <div class="modal-header">
-        <h2 class="modal-title">我的收藏夹</h2>
-        <button class="close-btn" @click="handleClose">×</button>
+      <div class="panel-header">
+        <h3>收藏到收藏夹</h3>
+        <button class="close-btn" @click="closePanel">×</button>
       </div>
 
-      <!-- 分类标签栏 -->
-      <div class="collection-tabs">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.key"
-          class="tab-btn"
-          :class="{ active: activeTab === tab.key }"
-          @click="activeTab = tab.key"
-        >
-          {{ tab.name }} ({{ getCollectionCount(tab.key) }})
-        </button>
+      <!-- 当前收藏项信息 -->
+      <div class="current-item">
+        <h4>{{ paper.title }}</h4>
+        <p v-if="paper.authors" class="authors">{{ paper.authors.join(', ') }}</p>
+        <p v-if="paper.journal" class="journal">{{ paper.journal }} · {{ paper.year }}</p>
       </div>
 
-      <!-- 收藏内容列表 -->
-      <div class="collection-content">
-        <!-- 空状态 -->
-        <div v-if="getCollectionList.length === 0" class="empty-collection">
-          <p class="empty-text">暂无{{ tabs.find(t => t.key === activeTab).name }}收藏</p>
-          <button class="back-btn" @click="handleClose">返回继续浏览</button>
+      <!-- 收藏夹列表 -->
+      <div class="folders-section">
+        <div class="section-header">
+          <h4>选择收藏夹</h4>
+          <button
+              class="create-folder-btn"
+              @click="showCreateFolder = true"
+          >
+            + 新建
+          </button>
         </div>
 
-        <!-- 收藏列表 -->
-        <ul v-else class="collection-list">
-          <li 
-            v-for="(item, index) in getCollectionList" 
-            :key="index"
-            class="collection-item"
+        <!-- 收藏夹列表 -->
+        <div class="folder-list">
+          <div
+              v-for="folder in folders"
+              :key="folder.id"
+              class="folder-item"
+              :class="{
+              active: selectedFolderId === folder.id,
+              'has-item': isPaperInFolder(folder.id)
+            }"
+              @click="toggleFolderSelection(folder.id)"
           >
-            <!-- 内容标题 -->
-            <a :href="item.url" target="_blank" class="item-title">{{ item.title }}</a>
-            
-            <!-- 元信息 -->
-            <div class="item-meta">
-              <span v-if="item.type === 'paper'" class="meta-item">DOI: {{ item.doi || '无' }}</span>
-              <span v-if="item.type === 'journal'" class="meta-item">ISSN: {{ item.issn || '无' }}</span>
-              <span v-if="item.type === 'patent'" class="meta-item">专利号: {{ item.patentNo || '无' }}</span>
-              <span class="meta-item">收藏时间: {{ item.collectTime }}</span>
+            <div class="folder-info">
+              <span class="folder-name">{{ folder.name }}</span>
+              <span class="item-count">{{ folder.paperCount }} 篇</span>
             </div>
-
-            <!-- 操作按钮 -->
-            <div class="item-actions">
-              <button class="action-btn view-btn" @click="viewItem(item)">查看</button>
-              <button class="action-btn delete-btn" @click="removeCollection(item)">取消收藏</button>
+            <div class="folder-status">
+              <span v-if="isPaperInFolder(folder.id)" class="already-added">已收藏</span>
+              <input
+                  type="radio"
+                  :checked="selectedFolderId === folder.id"
+                  @click.stop="toggleFolderSelection(folder.id)"
+              />
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
 
-      <!-- 弹窗底部 -->
-      <div class="modal-footer">
-        <button class="footer-btn cancel-btn" @click="handleClose">关闭</button>
-        <button class="footer-btn clear-btn" @click="clearCollection(activeTab)" :disabled="getCollectionList.length === 0">
-          清空{{ tabs.find(t => t.key === activeTab).name }}收藏
+      <!-- 操作按钮 -->
+      <div class="panel-actions">
+        <button class="btn-secondary" @click="closePanel">取消</button>
+        <button
+            class="btn-primary"
+            @click="handleCollect"
+            :disabled="!selectedFolderId"
+        >
+          {{ getActionButtonText() }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 创建收藏夹弹窗 -->
+  <div v-if="showCreateFolder" class="modal-overlay">
+    <div class="create-folder-modal">
+      <div class="modal-header">
+        <h3>创建收藏夹</h3>
+        <button class="close-btn" @click="closeCreateFolder">×</button>
+      </div>
+      <div class="modal-body">
+        <input
+            v-model="newFolderName"
+            type="text"
+            placeholder="输入收藏夹名称"
+            class="folder-input"
+            @keyup.enter="createNewFolder"
+            ref="folderInputRef"
+        />
+        <p class="input-hint">建议使用具体的主题命名，便于管理</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="closeCreateFolder">取消</button>
+        <button
+            class="btn-primary"
+            @click="createNewFolder"
+            :disabled="!newFolderName.trim()"
+        >
+          创建
         </button>
       </div>
     </div>
@@ -69,413 +118,531 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits, computed } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue'
 
-// 1. 接收父组件传递的参数
+// 接收论文数据
 const props = defineProps({
-  // 弹窗显示/隐藏状态
-  visible: {
-    type: Boolean,
-    default: false
-  },
-  // 要收藏的初始内容（论文/期刊/专利）
-  initItem: {
+  paper: {
     type: Object,
-    default: null
+    required: true,
+    default: () => ({
+      id: 1,
+      title: '',
+      authors: [],
+      journal: '',
+      year: '',
+      doi: '',
+      url: ''
+    })
   }
-});
+})
 
-// 2. 定义发送给父组件的事件
-const emit = defineEmits(['close']);
+// 响应事件
+const emit = defineEmits(['collected', 'uncollected'])
 
-// 3. 分类标签配置
-const tabs = ref([
-  { key: 'paper', name: '论文' },
-  { key: 'journal', name: '期刊' },
-  { key: 'patent', name: '专利' }
-]);
+// 状态管理
+const showCollectionPanel = ref(false)
+const showCreateFolder = ref(false)
+const newFolderName = ref('')
+const selectedFolderId = ref(null)
+const folderInputRef = ref(null)
 
-// 4. 当前激活的标签
-const activeTab = ref('paper');
+// 收藏夹数据（示例，实际应从后端获取）
+const folders = ref([
+  { id: '1', name: '机器学习', paperCount: 12 },
+  { id: '2', name: '自然语言处理', paperCount: 8 },
+  { id: '3', name: '计算机视觉', paperCount: 15 },
+  { id: '4', name: '深度学习', paperCount: 20 }
+])
 
-// 5. 修复：初始化收藏数据（确保每个分类都是数组，避免undefined）
-const collectionData = ref({
-  paper: [],
-  journal: [],
-  patent: []
-});
+// 用户收藏记录（示例，实际应从后端获取）
+const userCollections = ref([
+  { folderId: '1', paperId: 'paper-001' },
+  { folderId: '2', paperId: 'paper-002' }
+])
 
-// 6. 修复：正确定义计算属性（返回当前分类的收藏列表）
-const getCollectionList = computed(() => {
-  // 兜底：如果分类不存在，返回空数组
-  return collectionData.value[activeTab.value] || [];
-});
+// 计算属性：当前论文是否已收藏
+const isInCollection = computed(() => {
+  return userCollections.value.some(
+      collection => collection.paperId === props.paper.id
+  )
+})
 
-// 7. 获取指定分类的收藏数量
-const getCollectionCount = (type) => {
-  // 兜底：如果分类不存在，返回0
-  return (collectionData.value[type] || []).length;
-};
+// 检查论文是否在指定收藏夹中
+const isPaperInFolder = (folderId) => {
+  return userCollections.value.some(
+      collection =>
+          collection.paperId === props.paper.id &&
+          collection.folderId === folderId
+  )
+}
 
-// 8. 关闭弹窗（通知父组件）
-const handleClose = () => {
-  emit('close');
-};
+// 获取收藏夹中当前论文的收藏记录
+const getCollectionInFolder = (folderId) => {
+  return userCollections.value.find(
+      collection =>
+          collection.paperId === props.paper.id &&
+          collection.folderId === folderId
+  )
+}
 
-// 9. 修复：添加收藏项（增加分类存在性判断，避免undefined）
-const addCollection = (item) => {
-  // 校验：收藏项不能为空，且必须有type
-  if (!item || !item.type) {
-    console.log('❌ 收藏项为空或类型错误');
-    return;
+// 获取操作按钮文本
+const getActionButtonText = () => {
+  if (!selectedFolderId.value) return '选择收藏夹'
+
+  const folder = folders.value.find(f => f.id === selectedFolderId.value)
+  if (!folder) return '收藏'
+
+  if (isPaperInFolder(folder.id)) {
+    return '已收藏，点击取消'
   }
+  return `收藏到 ${folder.name}`
+}
 
-  // 兜底：如果分类不存在，初始化该分类为数组
-  if (!collectionData.value[item.type]) {
-    collectionData.value[item.type] = [];
-  }
+// 切换收藏夹选择
+const toggleFolderSelection = (folderId) => {
+  selectedFolderId.value = folderId
+}
 
-  // 避免重复收藏（根据标题+类型判断）
-  const isExist = collectionData.value[item.type].some(
-    i => i.title === item.title && i.type === item.type
-  );
+// 处理收藏操作
+const handleCollect = async () => {
+  if (!selectedFolderId.value) return
 
-  if (isExist) {
-    alert(`「${item.title}」已在收藏夹中`);
-    return;
-  }
+  const folder = folders.value.find(f => f.id === selectedFolderId.value)
+  if (!folder) return
 
-  // 添加到对应分类的收藏列表
-  collectionData.value[item.type].unshift(item);
-  console.log('✅ 收藏成功：', item);
-  alert(`已成功收藏：「${item.title}」`);
-  
-  // 自动切换到对应分类
-  activeTab.value = item.type;
-};
-
-// 10. 修复：移除单个收藏项（增加分类存在性判断）
-const removeCollection = (item) => {
-  // 校验：收藏项不能为空，且分类必须存在
-  if (!item || !item.type || !collectionData.value[item.type]) return;
-
-  // 过滤掉要删除的项
-  collectionData.value[item.type] = collectionData.value[item.type].filter(i => {
-    return !(i.title === item.title && i.type === item.type);
-  });
-
-  alert(`已取消收藏：「${item.title}」`);
-};
-
-// 11. 修复：清空当前分类的收藏（增加分类存在性判断）
-const clearCollection = (type) => {
-  // 校验：分类不存在或无收藏项，直接返回
-  if (!collectionData.value[type] || collectionData.value[type].length === 0) return;
-
-  // 二次确认，防止误操作
-  if (confirm(`确定要清空「${tabs.value.find(t => t.key === type).name}」收藏吗？此操作不可恢复！`)) {
-    collectionData.value[type] = [];
-    alert(`已清空「${tabs.value.find(t => t.key === type).name}」收藏`);
-  }
-};
-
-// 12. 查看收藏项（跳转链接）
-const viewItem = (item) => {
-  if (item && item.url) {
-    window.open(item.url, '_blank');
+  if (isPaperInFolder(folder.id)) {
+    // 取消收藏
+    await removeFromCollection(folder.id)
+    emit('uncollected', { folder, paper: props.paper })
   } else {
-    alert('暂无访问链接');
+    // 添加收藏
+    await addToCollection(folder.id)
+    emit('collected', { folder, paper: props.paper })
   }
-};
 
-// 13. 监听弹窗显示状态，自动添加收藏项
-watch(
-  () => props.visible,
-  (newVal) => {
-    console.log('🔔 弹窗visible状态变化：', newVal);
-    // 弹窗打开且有初始收藏项时，自动添加
-    if (newVal && props.initItem) {
-      console.log('🔔 开始添加收藏项：', props.initItem);
-      addCollection(props.initItem);
+  // 更新收藏夹论文数量
+  updateFolderPaperCount(folder.id)
+
+  // 关闭面板
+  setTimeout(() => {
+    showCollectionPanel.value = false
+  }, 500)
+}
+
+// 添加收藏
+const addToCollection = async (folderId) => {
+  // 模拟API调用
+  console.log('添加收藏:', props.paper.id, '到收藏夹:', folderId)
+
+  userCollections.value.push({
+    folderId,
+    paperId: props.paper.id,
+    collectedAt: new Date().toISOString()
+  })
+
+  // 在实际应用中，这里应该调用API
+  // await api.addToCollection({
+  //   folderId,
+  //   paperId: props.paper.id
+  // })
+}
+
+// 移除收藏
+const removeFromCollection = async (folderId) => {
+  // 模拟API调用
+  console.log('移除收藏:', props.paper.id, '从收藏夹:', folderId)
+
+  const index = userCollections.value.findIndex(
+      collection =>
+          collection.paperId === props.paper.id &&
+          collection.folderId === folderId
+  )
+
+  if (index > -1) {
+    userCollections.value.splice(index, 1)
+  }
+
+  // 在实际应用中，这里应该调用API
+  // await api.removeFromCollection({
+  //   folderId,
+  //   paperId: props.paper.id
+  // })
+}
+
+// 更新收藏夹论文数量
+const updateFolderPaperCount = (folderId) => {
+  const folder = folders.value.find(f => f.id === folderId)
+  if (folder) {
+    const count = userCollections.value.filter(
+        collection => collection.folderId === folderId
+    ).length
+    folder.paperCount = count
+  }
+}
+
+// 创建新收藏夹
+const createNewFolder = async () => {
+  if (!newFolderName.value.trim()) return
+
+  const newFolder = {
+    id: `folder-${Date.now()}`,
+    name: newFolderName.value.trim(),
+    paperCount: 0
+  }
+
+  // 模拟API调用
+  console.log('创建收藏夹:', newFolder)
+
+  folders.value.push(newFolder)
+  newFolderName.value = ''
+  showCreateFolder.value = false
+
+  // 自动选中新创建的收藏夹
+  selectedFolderId.value = newFolder.id
+
+  // 在实际应用中，这里应该调用API
+  // const result = await api.createFolder({ name: newFolder.name })
+  // newFolder.id = result.id
+}
+
+// 关闭创建收藏夹弹窗
+const closeCreateFolder = () => {
+  showCreateFolder.value = false
+  newFolderName.value = ''
+}
+
+// 关闭收藏面板
+const closePanel = () => {
+  showCollectionPanel.value = false
+  selectedFolderId.value = null
+}
+
+// 初始化：检查论文是否已收藏
+onMounted(() => {
+  // 如果有默认收藏夹，预选中
+  if (folders.value.length > 0) {
+    selectedFolderId.value = folders.value[0].id
+  }
+
+  // 如果论文已收藏，找到对应的收藏夹
+  if (isInCollection.value) {
+    const collection = userCollections.value.find(
+        c => c.paperId === props.paper.id
+    )
+    if (collection) {
+      selectedFolderId.value = collection.folderId
     }
-  },
-  { immediate: true }
-);
+  }
+})
 </script>
 
 <style scoped>
-/* 弹窗遮罩层 */
-.collection-modal-overlay {
+.collect-btn, .collected-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.collect-btn {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.collect-btn:hover {
+  background-color: #bbdefb;
+}
+
+.collected-btn {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.collected-btn:hover {
+  background-color: #c8e6c9;
+}
+
+/* 收藏面板样式 */
+.collection-panel-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1000;
   padding: 20px;
 }
 
-/* 弹窗主体 */
-.collection-modal {
+.collection-panel {
+  background: white;
+  border-radius: 12px;
   width: 100%;
-  max-width: 700px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 480px;
   max-height: 80vh;
-  overflow-y: auto;
-  z-index: 10000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* 弹窗头部 */
-.modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #eee;
+.panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #222;
+.panel-header h3 {
   margin: 0;
+  font-size: 18px;
+  color: #333;
 }
 
 .close-btn {
   width: 32px;
   height: 32px;
   border: none;
-  background: transparent;
-  font-size: 20px;
+  background: none;
+  font-size: 24px;
   color: #666;
   cursor: pointer;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 .close-btn:hover {
   background-color: #f5f5f5;
+}
+
+/* 当前论文信息 */
+.current-item {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #fafafa;
+}
+
+.current-item h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.authors {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.journal {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #888;
+}
+
+/* 收藏夹部分 */
+.folders-section {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h4 {
+  margin: 0;
+  font-size: 16px;
   color: #333;
 }
 
-/* 分类标签栏 */
-.collection-tabs {
-  display: flex;
-  border-bottom: 1px solid #eee;
-  background-color: #f9f9f9;
-}
-
-.tab-btn {
-  padding: 12px 24px;
-  border: none;
+.create-folder-btn {
+  padding: 6px 12px;
   background: transparent;
-  font-size: 14px;
-  color: #666;
-  cursor: pointer;
-  flex: 1;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.tab-btn.active {
-  color: #1a56db;
-  font-weight: 600;
-  border-bottom: 2px solid #1a56db;
-  background-color: #fff;
-}
-
-.tab-btn:hover:not(.active) {
-  color: #1a56db;
-  background-color: #f0f7ff;
-}
-
-/* 收藏内容区域 */
-.collection-content {
-  flex: 1;
-  padding: 20px;
-}
-
-/* 空状态 */
-.empty-collection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-}
-
-.empty-text {
-  font-size: 16px;
-  color: #666;
-  margin-bottom: 20px;
-}
-
-.back-btn {
-  padding: 8px 16px;
-  border: 1px solid #1a56db;
+  border: 1px solid #1976d2;
+  color: #1976d2;
   border-radius: 4px;
-  background-color: #fff;
-  color: #1a56db;
-  cursor: pointer;
   font-size: 14px;
+  cursor: pointer;
   transition: all 0.2s;
 }
 
-.back-btn:hover {
-  background-color: #f0f7ff;
+.create-folder-btn:hover {
+  background-color: #e3f2fd;
 }
 
-/* 收藏列表 */
-.collection-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.collection-item {
-  padding: 16px;
-  border-bottom: 1px solid #eee;
+/* 收藏夹列表 */
+.folder-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.collection-item:last-child {
-  border-bottom: none;
-}
-
-.item-title {
-  font-size: 16px;
-  color: #1a56db;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.item-title:hover {
-  text-decoration: underline;
-  color: #0d47a1;
-}
-
-.item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 13px;
-  color: #666;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-}
-
-/* 操作按钮 */
-.item-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-.action-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.view-btn {
-  background-color: #f0f7ff;
-  color: #1a56db;
-}
-
-.view-btn:hover {
-  background-color: #e1f5fe;
-}
-
-.delete-btn {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.delete-btn:hover {
-  background-color: #ffebee;
-}
-
-/* 弹窗底部 */
-.modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #eee;
+.folder-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.footer-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
   transition: all 0.2s;
 }
 
-.cancel-btn {
+.folder-item:hover {
+  border-color: #bbdefb;
+  background-color: #f5faff;
+}
+
+.folder-item.active {
+  border-color: #1976d2;
+  background-color: #e3f2fd;
+}
+
+.folder-item.has-item {
+  border-color: #c8e6c9;
+  background-color: #f1f8e9;
+}
+
+.folder-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.item-count {
+  font-size: 12px;
+  color: #666;
+}
+
+.folder-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.already-added {
+  font-size: 12px;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+/* 操作按钮 */
+.panel-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-secondary, .btn-primary {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
   background-color: #f5f5f5;
   color: #666;
 }
 
-.cancel-btn:hover {
+.btn-secondary:hover {
   background-color: #e0e0e0;
 }
 
-.clear-btn {
-  background-color: #dc2626;
+.btn-primary {
+  background-color: #1976d2;
   color: white;
 }
 
-.clear-btn:hover {
-  background-color: #b91c1c;
+.btn-primary:hover:not(:disabled) {
+  background-color: #1565c0;
 }
 
-.clear-btn:disabled {
-  background-color: #eee;
+.btn-primary:disabled {
+  background-color: #e0e0e0;
   color: #999;
   cursor: not-allowed;
 }
 
-/* 响应式适配 */
-@media (max-width: 768px) {
-  .collection-modal {
-    max-width: 100%;
-    min-width: unset;
-  }
+/* 创建收藏夹弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+}
 
-  .tab-btn {
-    padding: 10px;
-    font-size: 13px;
-  }
+.create-folder-modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
 
-  .item-actions {
-    flex-direction: column;
-  }
+.modal-body {
+  padding: 24px;
+}
 
-  .modal-footer {
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-  }
+.folder-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.folder-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.input-hint {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.modal-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
 }
 </style>

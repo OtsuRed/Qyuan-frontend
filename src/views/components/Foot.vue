@@ -29,8 +29,8 @@
 <style scoped>
 /* 底部样式 */
 .home-footer {
-  background: #2c3e50;
-  color: white;
+  background: var(--footer-bg);
+  color: var(--footer-text);
   padding: 40px 20px 20px;
   margin-top: 60px;
 }
@@ -59,24 +59,25 @@
 .footer-section h4 {
   font-size: 18px;
   margin-bottom: 10px;
+  color: var(--text-primary);
 }
 
 .footer-section a {
-  color: #bdc3c7;
+  color: var(--text-tertiary);
   text-decoration: none;
   font-size: 14px;
   transition: color 0.3s;
 }
 
 .footer-section a:hover {
-  color: white;
+  color: var(--text-primary);
 }
 
 .footer-bottom {
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #34495e;
-  color: #bdc3c7;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-tertiary);
   font-size: 14px;
 }
 </style>

@@ -15,8 +15,17 @@ import './styles/dark-theme.css'
 import './views/components/ThemeSwitch.vue'
 import { useThemeStore} from "@/stores/theme.js";
 import ThemeSwitch from "@/views/components/ThemeSwitch.vue";
+import 'element-plus/theme-chalk/dark/css-vars.css'
+import {getTheme} from "@/utils/storage.js"; // 引入暗黑主题
 
 const app = createApp(App)
+const savedTheme = getTheme()
+const html = document.documentElement
+if (savedTheme === 'dark') {
+    html.setAttribute('data-theme', 'dark')
+} else {
+    html.removeAttribute('data-theme')
+}
 app.use(ElementPlus, {
     locale: zhCn,
 })
@@ -27,11 +36,11 @@ app.use(pinia)
 
 app.component('ThemeSwitch', ThemeSwitch)
 
+app.config.globalProperties.$initTheme = () => {
+    const themeStore = useThemeStore()
+    themeStore.initTheme()
+}
 
 app.mount('#app')
 
 // 应用挂载后初始化主题
-app.config.globalProperties.$nextTick(() => {
-    const themeStore = useThemeStore()
-    themeStore.initTheme()
-})

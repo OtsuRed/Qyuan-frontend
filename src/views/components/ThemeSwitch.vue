@@ -35,11 +35,9 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useThemeStore } from '@/stores/theme'
+<script setup>import { ref, computed, onMounted } from 'vue'
+import { getTheme, setTheme } from '@/utils/storage.js'
 
-const themeStore = useThemeStore()
 const showAdvanced = ref(false)
 
 // 主题预设
@@ -69,11 +67,17 @@ const themePresets = ref([
 
 const currentPreset = ref('light')
 
-const isDark = computed(() => themeStore.currentTheme === 'dark')
+// 从localStorage获取当前主题
+const currentTheme = ref(getTheme())
+
+const isDark = computed(() => currentTheme.value === 'dark')
 
 const toggleTheme = () => {
-  themeStore.toggleTheme()
-  currentPreset.value = isDark.value ? 'dark' : 'light'
+  const newTheme = isDark.value ? 'light' : 'dark'
+  setTheme(newTheme)
+  currentTheme.value = newTheme
+  applyTheme(newTheme)
+  currentPreset.value = newTheme
 }
 
 const selectPreset = (preset) => {
@@ -82,21 +86,45 @@ const selectPreset = (preset) => {
   if (preset.id === 'auto') {
     // 自动模式：根据系统主题切换
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    themeStore.setTheme(prefersDark ? 'dark' : 'light')
+    const theme = prefersDark ? 'dark' : 'light'
+    setTheme(theme)
+    currentTheme.value = theme
+    applyTheme(theme)
 
     // 监听系统主题变化
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const handleChange = (e) => {
-      themeStore.setTheme(e.matches ? 'dark' : 'light')
+      const newTheme = e.matches ? 'dark' : 'light'
+      setTheme(newTheme)
+      currentTheme.value = newTheme
+      applyTheme(newTheme)
     }
     mediaQuery.addEventListener('change', handleChange)
   } else {
-    themeStore.setTheme(preset.id)
+    setTheme(preset.id)
+    currentTheme.value = preset.id
+    applyTheme(preset.id)
+  }
+}
+
+// 应用主题到页面
+const applyTheme = (theme) => {
+  const html = document.documentElement
+  if (theme === 'dark') {
+    html.setAttribute('data-theme', 'dark')
+  } else {
+    html.removeAttribute('data-theme')
   }
 }
 
 onMounted(() => {
-  currentPreset.value = themeStore.currentTheme
+  // 从localStorage获取保存的主题设置
+  const savedTheme = getTheme()
+  currentTheme.value = savedTheme
+  currentPreset.value = savedTheme
+
+  // 应用保存的主题
+  applyTheme(savedTheme)
 })
 </script>
 

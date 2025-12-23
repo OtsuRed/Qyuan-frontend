@@ -1,9 +1,9 @@
 import http from "./request.js";
 //为http增加请求前缀read_notes
-http.defaults.baseURL = "/api/read_notes/record";
+const baseURL = "/read_notes/record";
 export const createReadRecord = (data) => {
     return http({
-            url: "/createReadRecord",
+            url: `${baseURL}/createReadRecord`,
             method: "post",
             data: data
         });
@@ -11,14 +11,14 @@ export const createReadRecord = (data) => {
 
 export const getReadRecord = (paper_id) => {
     return http({
-            url: `/getReadRecord/${paper_id}`,
+            url: `${baseURL}/getReadRecord/${paper_id}`,
             method: "get"
         });
 };
 
 export const updateReadRecord = (data,record_id) => {
     return http({
-            url: `/updateReadRecord/${record_id}`,
+            url: `${baseURL}/updateReadRecord/${record_id}`,
             method: "post",
             data: data
         });
@@ -26,7 +26,7 @@ export const updateReadRecord = (data,record_id) => {
 
 export const getReadRecordByPage = (page_data) => {
     return http({
-            url: `/getReadRecordByPage`,
+            url: `${baseURL}/getReadRecordByPage`,
             method: "get",
             params: page_data
         });

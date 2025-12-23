@@ -1,609 +1,800 @@
 <template>
-  <div class="wanfang-search-page">
-    <!-- 顶部导航栏（完全清空） -->
-    <header class="page-header"></header>
+  <div class="search-page">
+    <!-- 顶部导航栏 -->
+    <!-- 搜索页面内容 -->
+    <div class="search-container">
+      <!-- 顶部搜索条 -->
+      <div class="search-bar-section">
+        <div class="search-bar-wrapper">
+          <div class="search-input-group">
+            <input
+                v-model="searchQuery"
+                type="text"
+                class="search-input"
+                placeholder="输入关键词搜索..."
+                @keyup.enter="performSearch"
+            />
+            <button class="search-btn" @click="performSearch">
+              <span class="search-icon">🔍</span>
+              搜索
+            </button>
+          </div>
 
-    <!-- 分类导航 -->
-    <nav class="category-nav">
-      <div class="nav-wrapper">
-        <span class="category-item active">全部</span>
-        <span class="category-item">期刊</span>
-        <span class="category-item">学位</span>
-        <span class="category-item">会议</span>
-        <span class="category-item">专利</span>
-        <span class="category-item more">更多>></span>
+          <!-- 搜索统计 -->
+          <div class="search-stats">
+            <span class="stat-item">
+              找到 <strong>{{ totalResults }}</strong> 个结果
+            </span>
+            <span class="stat-item">
+              用时 <strong>{{ searchTime }}</strong> 秒
+            </span>
+            <span class="stat-item">
+              关键词: <strong>{{ currentKeyword }}</strong>
+            </span>
+          </div>
+        </div>
       </div>
-    </nav>
 
-    <!-- 搜索区域（仅保留搜索框+按钮） -->
-    <section class="search-area">
-      <div class="search-wrapper">
-        <input
-          type="text"
-          v-model="searchKeyword"
-          placeholder="请输入关键词/标题/作者/DOI"
-          class="search-input"
-        />
-        <button class="search-btn" @click="handleSearch">搜索</button>
-      </div>
-    </section>
-
-    <!-- 主体内容区域 -->
-    <main class="main-content">
-      <div class="content-wrapper">
-        <!-- 左侧筛选栏 -->
-        <aside class="filter-sidebar">
-          <!-- 论文类别筛选 -->
-          <div class="filter-block">
-            <h3 class="filter-title" @click="toggleFilter('category')">
-              论文类别
-              <span class="arrow" :class="{ expand: filterStatus.category }">▼</span>
-            </h3>
-            <div class="filter-content" v-show="filterStatus.category">
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.category" value="computer" />
-                计算机科学
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.category" value="ai" />
-                人工智能
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.category" value="electronics" />
-                电子工程
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.category" value="biology" />
-                生物科学
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.category" value="physics" />
-                物理学
-              </label>
-            </div>
-          </div>
-
-          <!-- 资源类型筛选（仅保留论文、期刊、专利） -->
-          <div class="filter-block">
-            <h3 class="filter-title" @click="toggleFilter('type')">
-              资源类型
-              <span class="arrow" :class="{ expand: filterStatus.type }">▼</span>
-            </h3>
-            <div class="filter-content" v-show="filterStatus.type">
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.type" value="paper" />
-                论文
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.type" value="journal" />
-                期刊
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.type" value="patent" />
-                专利
-              </label>
-            </div>
-          </div>
-
-          <!-- 年份筛选 -->
-          <div class="filter-block">
-            <h3 class="filter-title" @click="toggleFilter('year')">
-              发表年份
-              <span class="arrow" :class="{ expand: filterStatus.year }">▼</span>
-            </h3>
-            <div class="filter-content" v-show="filterStatus.year">
-              <label class="filter-checkbox" v-for="year in yearList" :key="year">
-                <input type="checkbox" v-model="filterForm.year" :value="year" />
-                {{ year }}
-              </label>
-            </div>
-          </div>
-
-          <!-- 语种筛选 -->
-          <div class="filter-block">
-            <h3 class="filter-title" @click="toggleFilter('language')">
-              语种
-              <span class="arrow" :class="{ expand: filterStatus.language }">▼</span>
-            </h3>
-            <div class="filter-content" v-show="filterStatus.language">
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.language" value="cn" />
-                中文
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.language" value="en" />
-                英文
-              </label>
-              <label class="filter-checkbox">
-                <input type="checkbox" v-model="filterForm.language" value="jp" />
-                日文
-              </label>
-            </div>
-          </div>
-        </aside>
-
-        <!-- 右侧结果展示区 -->
-        <section class="result-content">
-          <!-- 结果概览（仅保留结果数量） -->
-          <div class="result-overview">
-            <span class="result-count">找到 {{ literatureList.length }} 条文献</span>
-          </div>
-
-          <!-- 文献列表（无核心标识） -->
-          <div class="literature-list">
-            <div class="literature-item" v-for="(item, index) in literatureList" :key="index">
-              <div class="literature-top">
-                <span class="literature-index">{{ index + 1 }}</span>
-                <h4 class="literature-title">
-                  {{ item.title }}
-                </h4>
-              </div>
-              <div class="literature-source">
-                <span class="resource-type">[{{ item.resourceType }}]</span>
-                <span class="author">{{ item.author }}</span>
-                <span class="journal">· 《{{ item.journal }}》</span>
-                <span class="publish-time">· {{ item.publishTime }}</span>
-              </div>
-              <div class="literature-abstract">
-                摘要：{{ item.abstract }}
-              </div>
-              <div class="literature-keywords">
-                关键词：{{ item.keywords.join('；') }}
-              </div>
-              <div class="literature-action">
-                <button class="action-btn">在线阅读</button>
-                <button class="action-btn">下载</button>
-                <button class="action-btn">引用</button>
-                <button class="action-btn">收藏</button>
-                <span class="literature-stat">被引：{{ item.citation }} | 下载：{{ item.download }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 分页组件 -->
-          <div class="pagination-wrapper">
-            <div class="pagination">
-              <button class="page-btn" :disabled="currentPage === 1">上一页</button>
-              <button 
-                class="page-number" 
-                :class="{ active: page === currentPage }"
-                v-for="page in pageNumberList" 
-                :key="page"
-                @click="handlePageChange(page)"
+      <!-- 主要内容区域 -->
+      <div class="main-content">
+        <!-- 左侧固定筛选栏 -->
+        <div class="sidebar-filter" ref="filterSidebar">
+          <div class="filter-sticky-wrapper">
+            <!-- 筛选头部 -->
+            <div class="filter-header">
+              <h3 class="filter-title">筛选条件</h3>
+              <button
+                  class="clear-filters-btn"
+                  @click="clearAllFilters"
+                  :disabled="!hasActiveFilters"
               >
-                {{ page }}
+                清除全部
               </button>
-              <button class="page-btn" :disabled="currentPage === totalPage">下一页</button>
+            </div>
+            <div v-if="hasActiveFilters" class="active-filters">
+              <h4 class="filter-section-title">活跃筛选</h4>
+              <div class="active-tags">
+                <span
+                    v-if="selectedTypes"
+                    class="active-tag"
+                    @click="removeTypeFilter(selectedTypes)"
+                >
+                  {{ getTypeLabel(selectedTypes) }}
+                </span>
+                <span
+                    v-if="startYear !== 2000 || endYear !== 2026"
+                    class="active-tag"
+                    @click="startYear = 2000; endYear = 2026; updateFilters()"
+                >
+                  {{ startYear }}-{{ endYear }}
+                </span>
+                <span
+                    v-for="field in selectedFields"
+                    :key="`field-${field}`"
+                    class="active-tag"
+                    @click="removeFieldFilter(field)"
+                >
+                  {{ getFieldLabel(field) }}
+                </span>
+                <span
+                    v-if="highViewsOnly"
+                    class="active-tag"
+                    @click="highViewsOnly = false; updateFilters()"
+                >
+                  高观看
+                </span>
+                <span
+                    v-if="highFavoritesOnly"
+                    class="active-tag"
+                    @click="highFavoritesOnly = false; updateFilters()"
+                >
+                  高收藏
+                </span>
+              </div>
+            </div>
+            <!-- 内容类型筛选 -->
+            <div class="filter-section">
+
+              <h4 class="filter-section-title">内容类型</h4>
+              <div class="filter-options">
+                <label
+                    v-for="type in contentTypes"
+                    :key="type.value"
+                    class="filter-option"
+                    :class="{ active: selectedTypes===type.value }"
+                >
+                  <input
+                      type="radio"
+                      :value="type.value"
+                      v-model="selectedTypes"
+                      @change="updateFilters"
+                      name="contentTypes"
+                  />
+                  <span class="option-label">{{ type.label }}</span>
+                  <span class="option-count">{{ type.count }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 发表时间筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">发表时间</h4>
+              <div class="filter-options">
+                <div class="date-range-selector">
+                  <div class="date-select-wrapper">
+                    <label class="date-label">从</label>
+                    <select v-model="startYear" @change="updateFilters" class="date-select">
+                      <option v-for="year in availableYears" :key="'start-'+year" :value="year">
+                        {{ year }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="date-separator">-</div>
+                  <div class="date-select-wrapper">
+                    <label class="date-label">到</label>
+                    <select v-model="endYear" @change="updateFilters" class="date-select">
+                      <option v-for="year in availableYears" :key="'end-'+year" :value="year">
+                        {{ year }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 学科领域筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">学科领域</h4>
+              <div class="filter-options">
+                <label
+                    v-for="field in subjectFields"
+                    :key="field.id"
+                    class="filter-option"
+                    :class="{ active: selectedFields.includes(field.id) }"
+                >
+                  <input
+                      type="checkbox"
+                      :value="field.id"
+                      v-model="selectedFields"
+                      @change="updateFilters"
+                  />
+                  <span class="option-label">{{ field.name }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 排序方式 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">排序方式</h4>
+              <div class="filter-options">
+                <label
+                    v-for="option in sortOptions"
+                    :key="option.value"
+                    class="filter-option"
+                    :class="{ active: sortBy === option.value }"
+                >
+                  <input
+                      type="radio"
+                      :value="option.value"
+                      v-model="sortBy"
+                      name="sortBy"
+                      @change="updateFilters"
+                  />
+                  <span class="option-label">{{ option.label }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 高观看筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">观看次数</h4>
+              <div class="filter-options">
+                <label class="filter-option" :class="{ active: highViewsOnly }">
+                  <input
+                      type="checkbox"
+                      v-model="highViewsOnly"
+                      @change="updateFilters"
+                  />
+                  <span class="option-label">只展示高观看</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 高收藏筛选 -->
+            <div class="filter-section">
+              <h4 class="filter-section-title">收藏数量</h4>
+              <div class="filter-options">
+                <label class="filter-option" :class="{ active: highFavoritesOnly }">
+                  <input
+                      type="checkbox"
+                      v-model="highFavoritesOnly"
+                      @change="updateFilters"
+                  />
+                  <span class="option-label">只展示高收藏</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 活跃筛选器 -->
+
+          </div>
+        </div>
+
+        <!-- 右侧搜索结果 -->
+        <div class="search-results">
+          <!-- 结果头部 -->
+          <div class="results-header">
+            <div class="results-title">
+              <h2>搜索结果</h2>
+              <span class="results-count">{{ showingResultsCount }} 条结果</span>
+            </div>
+
+            <!-- 结果排序选项 -->
+            <div class="results-sort">
+              <span class="sort-label">排序:</span>
+              <select v-model="sortBy" @change="updateFilters" class="sort-select">
+                <option
+                    v-for="option in sortOptions"
+                    :key="option.value"
+                    :value="option.value"
+                >
+                  {{ option.label }}
+                </option>
+              </select>
+              <div class="view-toggle">
+                <button
+                    class="view-btn"
+                    :class="{ active: viewMode === 'list' }"
+                    @click="viewMode = 'list'"
+                    title="列表视图"
+                >
+                  ☰
+                </button>
+                <button
+                    class="view-btn"
+                    :class="{ active: viewMode === 'grid' }"
+                    @click="viewMode = 'grid'"
+                    title="网格视图"
+                >
+                  ⬛
+                </button>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
-    </main>
 
-    <!-- 底部 -->
-    <footer class="page-footer">
-      <div class="footer-text">© 2025 XX知识服务平台 版权所有</div>
-    </footer>
+          <!-- 搜索结果内容 -->
+          <div class="results-container" :class="`view-${viewMode}`">
+            <div v-if="loading" class="loading-indicator">
+              <div class="spinner"></div>
+              <p>正在搜索中...</p>
+            </div>
+
+            <div v-else-if="allResults.length === 0" class="no-results">
+              <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>未找到相关结果</h3>
+                <p>尝试调整筛选条件或使用不同的关键词</p>
+                <button class="clear-filters-btn-large" @click="clearAllFilters">
+                  清除所有筛选条件
+                </button>
+              </div>
+            </div>
+
+            <div v-else>
+              <!-- 列表视图 -->
+              <div v-if="viewMode === 'list'" class="results-list">
+                <div
+                    v-for="result in allResults"
+                    :key="result.paper_id"
+                    class="result-item list-item"
+                >
+                  <div class="result-type-badge" :class="selectedTypes">
+                    {{ selectedTypes }}
+                  </div>
+
+                  <div class="result-content">
+                    <h3 class="result-title">
+                      <router-link
+                          :to="`/readpaper/${selectedTypes}?paper_id=${result.paper_id}`"
+                      >
+                        {{ result.title }}
+                      </router-link>
+                    </h3>
+
+                    <div class="result-meta">
+                      <span class="meta-item">
+                        📅 {{ formatDay(result.updated) }}
+                      </span>
+                      <span v-if="result.journal_source!=='N/A'" class="meta-item">
+                        📚 {{ result.journal_source }}
+                      </span>
+                    </div>
+
+                    <p class="result-excerpt">
+                      {{ result.abstract }}
+                    </p>
+                    <div class="result-excerpt">
+                       {{result.submitter}} 等
+                        <div v-if="result.doi!=='N/A'" class="result-doi">
+                          doi:  {{result.doi}}
+                        </div>
+                    </div>
+
+                    <div class="result-footer">
+                      <div class="result-stats">
+
+                        <span class="stat">
+                          <i class="stat-icon">👁️</i> {{ result.read_count }}
+                        </span>
+                        <span class="stat">
+                          <i class="stat-icon">⭐</i> {{ result.favoriate_count }}
+                        </span>
+                        <span class="tag">
+                              {{ subjectFields[result.category_id].name}}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 网格视图 -->
+              <div v-else class="results-grid">
+                <div
+                    v-for="result in allResults"
+                    :key="result.id"
+                    class="result-item grid-item"
+                >
+                  <div class="result-header">
+                    <span class="result-type-badge" :class="selectedTypes">
+                         {{ selectedTypes }}
+                    </span>
+                    <span class="result-date">{{ result.date }}</span>
+                  </div>
+
+                  <h3 class="result-title">
+                    <router-link :to="`/${result.type}/${result.id}`">
+                      {{ result.title }}
+                    </router-link>
+                  </h3>
+
+
+                  <p class="result-excerpt">
+                    {{ result.abstract }}
+                  </p>
+                  <div class="result-meta">
+                      <span class="meta-item">
+                        📅 {{ formatDay(result.updated) }}
+                      </span>
+                  </div>
+                  <div class="result-tags">
+                    <span
+                        v-for="tag in result.tags"
+                        :key="tag"
+                        class="tag"
+                        @click="addTagFilter(tag)"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
+
+                  <div class="result-footer">
+                    <div class="result-stats">
+                      <span class="stat">
+                        <i class="stat-icon">👁️</i> {{ result.read_count }}
+                      </span>
+                      <span class="stat">
+                        <i class="stat-icon">⭐</i> {{ result.favoriate_count }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 分页控件 -->
+              <div class="pagination" v-if="totalPages > 1">
+                <button
+                    class="page-btn"
+                    :disabled="currentPage === 1"
+                    @click="goToPage(currentPage - 1)"
+                >
+                  ← 上一页
+                </button>
+
+                <div class="page-numbers">
+                  <button
+                      v-for="page in visiblePages"
+                      :key="page"
+                      class="page-number"
+                      :class="{ active: currentPage === page }"
+                      @click="goToPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+
+                  <span v-if="showEllipsis" class="page-ellipsis">...</span>
+                </div>
+
+                <button
+                    class="page-btn"
+                    :disabled="currentPage === totalPages"
+                    @click="goToPage(currentPage + 1)"
+                >
+                  下一页 →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import '@/views/search/Search.styles.css';
+const route = useRoute();
+const router = useRouter();
 
-// 搜索关键词
-const searchKeyword = ref('');
+// 搜索查询
+const searchQuery = ref('');
+const currentKeyword = ref('');
 
-// 筛选状态（是否展开）
-const filterStatus = ref({
-  category: true,
-  type: true,
-  year: true,
-  language: true
-});
+// 筛选条件
+const selectedTypes = ref('');
+selectedTypes.value = 'paper';
+const startYear = ref(2000);
+const endYear = ref(2026);
+const selectedFields = ref([]);
+const sortBy = ref('');
+const selectedAuthors = ref([]);
+const authorSearch = ref('');
+const highViewsOnly = ref(false);
+const highFavoritesOnly = ref(false);
 
-// 筛选表单数据
-const filterForm = ref({
-  category: [],
-  type: [],
-  year: [],
-  language: []
-});
-
-// 年份列表
-const yearList = ref([2025, 2024, 2023, 2022, 2021, 2020]);
-
-// 分页参数
+// 视图设置
+const viewMode = ref('list');
+const loading = ref(false);
 const currentPage = ref(1);
-const totalPage = ref(7);
-const pageSize = ref(10);
+const pageSize = 10;
 
-// 生成分页数字列表
-const pageNumberList = computed(() => {
-  return Array.from({ length: totalPage.value }, (_, i) => i + 1);
-});
-
-// 文献列表数据
-const literatureList = ref([
-  {
-    title: '基于Vue 3的学术搜索页面设计与实现',
-    resourceType: '论文',
-    author: '张三, 李四',
-    journal: '计算机工程与应用',
-    publishTime: '2025-06',
-    abstract: '针对学术平台搜索页面的专业性和易用性需求，结合Vue 3的Composition API特性，设计并实现了一套包含搜索、筛选、结果展示的完整页面，提升了用户检索文献的效率。',
-    keywords: ['Vue 3', '学术搜索', '前端开发', '组件化'],
-    citation: 12,
-    download: 256
-  },
-  {
-    title: '学术文献检索系统的优化策略研究',
-    resourceType: '期刊',
-    author: '王五, 赵六',
-    journal: '情报杂志',
-    publishTime: '2025-03',
-    abstract: '分析了当前学术文献检索系统存在的检索精度不足、筛选逻辑繁琐等问题，提出了基于关键词权重和用户行为的优化策略，通过实验验证了策略的有效性。',
-    keywords: ['文献检索', '优化策略', '关键词权重', '用户行为'],
-    citation: 8,
-    download: 198
-  },
-  {
-    title: '大数据时代学术资源整合与共享平台构建',
-    resourceType: '专利',
-    author: '孙七',
-    journal: '清华大学',
-    publishTime: '2024-12',
-    abstract: '以大数据技术为支撑，结合云计算和区块链技术，构建了一套跨机构的学术资源整合与共享平台，解决了学术资源分散、共享困难等痛点，为科研工作者提供了便捷的资源获取渠道。',
-    keywords: ['大数据', '学术资源', '资源共享', '区块链'],
-    citation: 5,
-    download: 156
-  }
+// 模拟数据
+const contentTypes = ref([
+  { label: '论文', value: 'paper', count: 0 },
+  { label: '专利', value: 'patent', count: 0 },
+  { label: '期刊', value: 'journal', count: 0 },
 ]);
 
-// 切换筛选栏展开/折叠
-const toggleFilter = (type) => {
-  filterStatus.value[type] = !filterStatus.value[type];
-};
+const subjectFields = ref(category);
 
-// 搜索事件
-const handleSearch = () => {
-  if (!searchKeyword.value.trim()) {
-    alert('请输入搜索关键词');
-    return;
+const sortOptions = ref([
+  { label: '最新发表', value: '' },
+  { label: '最多浏览', value: 'read_count' },
+  { label: '最多收藏', value: 'favoriate_count' }
+]);
+
+
+// 模拟搜索结果数据
+const allResults = ref([
+]);
+
+// 计算属性
+const filteredAuthors = computed(() => {
+  if (!authorSearch.value.toString().trim()) return allAuthors.value;
+
+  const searchTerm = authorSearch.value.toString().toLowerCase().trim();
+  return allAuthors.value.filter(author =>
+      author.name.toLowerCase().includes(searchTerm)
+  );
+});
+
+const hasActiveFilters = computed(() => {
+  return (
+      selectedTypes.value !== '' ||
+      startYear.value !== 2000 ||
+      endYear.value !== 2026 ||
+      selectedFields.value.length > 0 ||
+      selectedAuthors.value.length > 0 ||
+      highViewsOnly.value ||
+      highFavoritesOnly.value
+  );
+});
+
+const filteredResults = computed(() => {
+  let results = [...allResults.value];
+
+  // 按类型筛选
+  if (selectedTypes.value) {
+    results = results.filter(result => result.type === selectedTypes.value);
   }
-  console.log('搜索关键词：', searchKeyword.value);
+
+  // 按领域筛选
+  if (selectedFields.value.length > 0) {
+    results = results.filter(result =>
+        result.fields.some(field => selectedFields.value.includes(field))
+    );
+  }
+
+  // 按时间范围筛选
+  results = results.filter(result => {
+    const resultYear = new Date(result.date).getFullYear();
+    return resultYear >= startYear.value && resultYear <= endYear.value;
+  });
+
+  // 高观看筛选
+  if (highViewsOnly.value) {
+    const viewThreshold = 1000; // 设定高观看的阈值
+    results = results.filter(result => result.views >= viewThreshold);
+  }
+
+  // 高收藏筛选
+  if (highFavoritesOnly.value) {
+    const favoriteThreshold = 100; // 设定高收藏的阈值
+    results = results.filter(result => result.stars >= favoriteThreshold);
+  }
+
+  // 排序
+
+  return results;
+});
+
+const totalResults = ref(0);
+const showingResultsCount = computed(() => {
+  const start = (currentPage.value - 1) * pageSize;
+  const end = Math.min(start + pageSize, totalResults.value);
+  return `${start + 1}-${end}`;
+});
+
+const totalPages = computed(() => Math.ceil(totalResults.value / pageSize));
+
+const availableYears = computed(() => {
+  const years = [];
+  for (let year = 2026; year >= 2000; year--) {
+    years.push(year);
+  }
+  return years;
+});
+
+const visiblePages = computed(() => {
+  const pages = [];
+  const maxVisible = 5;
+  let start = Math.max(1, currentPage.value - 2);
+  let end = Math.min(totalPages.value, start + maxVisible - 1);
+
+  start = Math.max(1, end - maxVisible + 1);
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  return pages;
+});
+
+const showEllipsis = computed(() => totalPages.value > visiblePages.value.length);
+
+// 搜索时间
+const searchTime = ref('0.25');
+
+// 方法
+const performSearch = async () => {
+  if (!searchQuery.value.toString().trim()) return;
+
+  loading.value = true;
+  currentKeyword.value = searchQuery.value;
+
+
+  try {
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log('category'+selectedFields.value)
+    console.log('类型'+selectedTypes.value)
+
+    let params={
+      page: currentPage.value,
+      size: pageSize,
+      keyword: searchQuery.value,
+      // startYear: startYear.value,
+      // endYear: endYear.value,
+    }
+
+    if(highViewsOnly.value){
+      params.minReadCount=10
+    }
+    if(highFavoritesOnly.value){
+      params.minFavoriteCount=10
+    }
+    if(sortBy.value!==''){
+      params.sortField=sortBy.value
+    }
+
+    await paperSearch(params,selectedFields.value).then(response => {
+      console.log('搜索结果:', response)
+       totalResults.value =response.data.total
+       allResults.value =[]
+       response.data.papers.forEach(paper => {
+        allResults.value.push(paper)
+      })
+      contentTypes.value = [
+        { label: '论文', value: 'paper', count: response.data.total },
+        { label: '专利', value: 'patent', count: 0 },
+        { label: '期刊', value: 'journal', count: 0 },
+      ]
+    })
+
+    console.log('搜索执行:', searchQuery.value);
+
+    // 模拟随机搜索时间
+    searchTime.value = (Math.random() * 0.5 + 0.1).toFixed(2);
+
+  } catch (error) {
+    console.error('搜索失败:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
-// 分页切换事件
-const handlePageChange = (page) => {
+const updateFilters = () => {
+  currentPage.value = 1; // 重置到第一页
+  performSearch();
+};
+
+const clearAllFilters = () => {
+  selectedTypes.value = 'paper';
+  startYear.value = 2000;
+  endYear.value = 2026;
+  selectedFields.value = [];
+  selectedAuthors.value = [];
+  authorSearch.value = '';
+  highViewsOnly.value = false;
+  highFavoritesOnly.value = false;
+  updateFilters();
+};
+
+const removeTypeFilter = (type) => {
+  selectedTypes.value = '';
+  updateFilters();
+};
+
+const removeFieldFilter = (field) => {
+  selectedFields.value = selectedFields.value.filter(f => f !== field);
+  updateFilters();
+};
+
+const removeAuthorFilter = (authorId) => {
+  selectedAuthors.value = selectedAuthors.value.filter(id => id !== authorId);
+  updateFilters();
+};
+
+const addTagFilter = (tag) => {
+  // 可以扩展为根据标签搜索
+  searchQuery.value = tag;
+  performSearch();
+};
+
+const getTypeLabel = (type) => {
+  const found = contentTypes.value.find(t => t.value === type);
+  return found ? found.label : type;
+};
+
+const getPeriodLabel = (period) => {
+  const found = publishPeriods.value.find(p => p.value === period);
+  return found ? found.label : period;
+};
+
+const getFieldLabel = (field) => {
+  const found = subjectFields.value.find(f => f.id == field);
+  return found ? found.name : field;
+};
+
+const getAuthorName = (authorId) => {
+  const found = allAuthors.value.find(a => a.id === authorId);
+  return found ? found.name : `作者${authorId}`;
+};
+
+const searchAuthors = () => {
+  // 在实际应用中，这里可以调用作者搜索API
+  console.log('搜索作者:', authorSearch.value);
+};
+
+const goToPage = async (page) => {
+  if (page < 1 || page > totalPages.value) return;
   currentPage.value = page;
+  // 调用搜索函数获取指定页的数据
+  await performSearch();
 };
+
+const saveResult = (resultId) => {
+  console.log('收藏结果:', resultId);
+  // 在实际应用中，这里会调用收藏API
+};
+
+// 监听路由参数变化
+watch(() => route.query, (newQuery) => {
+  if (newQuery.q) {
+    searchQuery.value = newQuery.q;
+    performSearch();
+  }
+});
+
+// 初始化
+onMounted(() => {
+  // 从路由参数获取搜索词
+  if (route.query.q) {
+    searchQuery.value = route.query.q;
+    selectedTypes.value = 'paper';
+    performSearch();
+  }
+
+  // 监听滚动，更新筛选栏位置（如果需要）
+  nextTick(() => {
+    window.addEventListener('scroll', handleScroll);
+  });
+
+});
+console.log('初始化:')
+const handleScroll = () => {
+  // 可以在这里添加滚动时更新筛选栏的逻辑
+  // 例如：当筛选栏滚动到顶部时固定等
+};
+
+// 清理
+import { onUnmounted } from 'vue';
+import Navigation from "@/views/components/Navigation.vue";
+import {paperSearch} from "@/api/search.js";
+import {formatDay, formatTime} from "../../utils/time.js";
+import {formatDate} from "@vueuse/shared";
+import {category} from "@/utils/storage.js";
+import {usePaperStore} from "@/stores/paperStore.js";
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
 </script>
-
-<style scoped>
-/* 全局样式 */
-.wanfang-search-page {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #f5f7fa;
-  font-family: "Microsoft YaHei", "SimSun", sans-serif;
-  color: #333;
-}
-
-.content-wrapper {
-  width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  gap: 20px;
-  padding: 20px 0;
-}
-
-/* 顶部导航（仅保留极窄高度） */
-.page-header {
-  width: 100%;
-  height: 10px;
-  background-color: #fff;
-}
-
-/* 分类导航 */
-.category-nav {
-  width: 100%;
-  background-color: #fff;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.nav-wrapper {
-  width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  gap: 25px;
-}
-
-.category-item {
-  cursor: pointer;
-  font-size: 14px;
-  color: #666;
-  transition: color 0.3s;
-}
-
-.category-item.active {
-  color: #1e88e5;
-  font-weight: bold;
-}
-
-.category-item:hover {
-  color: #1e88e5;
-}
-
-/* 搜索区域 */
-.search-area {
-  width: 100%;
-  padding: 30px 0;
-  background-color: #fff;
-  margin-top: 10px;
-}
-
-.search-wrapper {
-  width: 800px;
-  margin: 0 auto;
+<style>
+.date-range-selector {
   display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.search-input {
-  flex: 1;
-  height: 40px;
-  padding: 0 15px;
-  border: 2px solid #1e88e5;
-  border-radius: 4px 0 0 4px;
+.date-select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.date-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  min-width: 100px;
+  cursor: pointer;
+}
+
+.date-select:focus {
   outline: none;
-  font-size: 14px;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
-.search-btn {
-  height: 40px;
-  width: 80px;
-  background-color: #1e88e5;
-  color: #fff;
-  border: none;
-  border-radius: 0 4px 4px 0;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.search-btn:hover {
-  background-color: #1976d2;
-}
-
-/* 左侧筛选栏 */
-.filter-sidebar {
-  width: 200px;
-  background-color: #fff;
-  border-radius: 4px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.filter-block {
-  margin-bottom: 20px;
-  border-bottom: 1px solid #f0f0f0;
-  padding-bottom: 15px;
-}
-
-.filter-title {
-  font-size: 15px;
-  font-weight: bold;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.arrow {
-  font-size: 12px;
-  transition: transform 0.3s;
-}
-
-.arrow.expand {
-  transform: rotate(180deg);
-}
-
-.filter-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filter-checkbox {
-  font-size: 13px;
-  color: #666;
-  cursor: pointer;
-}
-
-/* 右侧结果区 */
-.result-content {
-  flex: 1;
-  background-color: #fff;
-  border-radius: 4px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.result-overview {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.result-count {
-  font-size: 14px;
-  color: #666;
-}
-
-/* 文献列表 */
-.literature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  margin-bottom: 30px;
-}
-
-.literature-item {
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.literature-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.literature-index {
-  font-size: 14px;
-  color: #999;
-  margin-top: 2px;
-}
-
-.literature-title {
+.date-separator {
   font-size: 16px;
-  margin: 0;
-  color: #1e88e5;
-  cursor: pointer;
-  transition: color 0.3s;
+  color: var(--text-secondary);
+  align-self: center;
+  margin: 0 4px;
 }
 
-.literature-title:hover {
-  color: #1976d2;
-  text-decoration: underline;
-}
-
-.literature-source {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.resource-type {
-  color: #f57c00;
-  font-weight: bold;
-}
-
-.literature-abstract {
-  font-size: 13px;
-  color: #333;
-  line-height: 1.6;
-  margin-bottom: 8px;
-}
-
-.literature-keywords {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 12px;
-}
-
-.literature-action {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.action-btn {
-  padding: 4px 10px;
-  border: 1px solid #1e88e5;
-  background-color: #fff;
-  color: #1e88e5;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  background-color: #1e88e5;
-  color: #fff;
-}
-
-.literature-stat {
-  font-size: 12px;
-  color: #999;
-  margin-left: auto;
-}
-
-/* 分页样式 */
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.page-btn {
-  padding: 4px 12px;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.page-btn:disabled {
-  cursor: not-allowed;
-  color: #ccc;
-  border-color: #eee;
-}
-
-.page-number {
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
-  text-align: center;
-  border: 1px solid #ddd;
-  background-color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.page-number.active {
-  background-color: #1e88e5;
-  color: #fff;
-  border-color: #1e88e5;
-}
-
-.page-number:hover:not(.active) {
-  border-color: #1e88e5;
-  color: #1e88e5;
-}
-
-/* 底部 */
-.page-footer {
-  width: 100%;
-  height: 60px;
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.footer-text {
-  font-size: 13px;
-  color: #999;
-}
 </style>

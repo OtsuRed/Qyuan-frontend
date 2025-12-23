@@ -3,9 +3,7 @@
     <div class="nav-container">
       <!-- 左侧项目名称 -->
       <div class="nav-left">
-        <div class="left">
-          <el-image :src="logoSrc" alt="logo" class="logo" @click="navigateToHome"/>
-        </div>
+        <h1 class="project-name">千源万码</h1>
       </div>
 
       <!-- 右侧导航项目 -->
@@ -21,10 +19,13 @@
             <router-link to="/user" class="nav-link">我的主页</router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/user" class="nav-link">消息</router-link>
+            <router-link to="/message" class="nav-link">消息</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/user" class="nav-link">发布</router-link>
+          </li>
+          <li class="nav-item" v-if="permissionLevel === 3">
+            <router-link to="/audit" class="nav-link">审核</router-link>
           </li>
         </ul>
         <template v-if="isLoggedIn">
@@ -57,6 +58,7 @@ const router = useRouter();
 // 模拟用户状态（实际应从Vuex/Pinia状态管理获取）
 const userStore = ref({
   isAuthenticated: true,
+  permission_level: 3,
   user: {
     id: 1,
     username: '张三',
@@ -68,7 +70,7 @@ const userStore = ref({
 const isLoggedIn = computed(() => userStore.value.isAuthenticated);
 const username = computed(() => userStore.value.user?.username || '用户');
 const userAvatar = computed(() => userStore.value.user?.avatar || 'default-avatar.png');
-
+const permissionLevel = computed(() => userStore.value.permission_level);
 // 导航方法
 const navigateTo = (path) => {
   router.push(path);

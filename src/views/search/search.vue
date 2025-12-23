@@ -314,10 +314,10 @@
                       {{ result.abstract }}
                     </p>
                     <div class="result-excerpt">
-                       {{result.submitter}} 等
-                        <div v-if="result.doi!=='N/A'" class="result-doi">
-                          doi:  {{result.doi}}
-                        </div>
+                      {{result.submitter}} 等
+                      <div v-if="result.doi!=='N/A'" class="result-doi">
+                        doi:  {{result.doi}}
+                      </div>
                     </div>
 
                     <div class="result-footer">
@@ -612,9 +612,9 @@ const performSearch = async () => {
 
     await paperSearch(params,selectedFields.value).then(response => {
       console.log('搜索结果:', response)
-       totalResults.value =response.data.total
-       allResults.value =[]
-       response.data.papers.forEach(paper => {
+      totalResults.value =response.data.total
+      allResults.value =[]
+      response.data.papers.forEach(paper => {
         allResults.value.push(paper)
       })
       contentTypes.value = [

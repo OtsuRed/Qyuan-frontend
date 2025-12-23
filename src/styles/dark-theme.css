@@ -1,0 +1,107 @@
+/* 覆盖主页样式 */
+[data-theme="dark"] .home-page {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .search-section {
+    background: var(--primary-gradient);
+}
+
+[data-theme="dark"] .search-box-container {
+    background: var(--bg-card);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .search-input {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .recommendation-column {
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .content-card {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .content-title {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .content-abstract {
+    color: var(--text-secondary);
+}
+
+/* 覆盖登录/注册页面 */
+[data-theme="dark"] .auth-page {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .auth-card {
+    background: var(--bg-card);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .auth-form input {
+    background: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* 覆盖用户中心 */
+[data-theme="dark"] .user-center {
+    background: var(--bg-primary);
+}
+
+[data-theme="dark"] .info-panel {
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .user-card {
+    background: var(--bg-card);
+}
+
+[data-theme="dark"] .stat-card {
+    background: var(--bg-card);
+}
+
+/* 通用文本颜色覆盖 */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] p {
+    color: var(--text-secondary);
+}
+
+/* 导航栏深色模式 */
+[data-theme="dark"] .navigation {
+    background: var(--nav-bg);
+    color: var(--nav-text);
+}
+
+/* 页脚深色模式 */
+[data-theme="dark"] .auth-footer,
+[data-theme="dark"] .home-footer {
+    background: var(--footer-bg);
+    color: var(--footer-text);
+}
+
+/* 表格深色模式 */
+[data-theme="dark"] table {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] th,
+[data-theme="dark"] td {
+    border-color: var(--border-color);
+}

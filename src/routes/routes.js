@@ -21,10 +21,20 @@ export const constRoutes = [
         component: () => import('@/views/pdf/index.vue'),
         meta:{title: 'pdf'},
     }, {
-    // 用户主页
-    path: '/user',
+        // 登录
+        path: '/login',
+        name: 'login',
+        component: () => import('@/views/auth/Login.vue')
+    }, {
+        // 注册
+        path: '/register',
+        name: 'Register',
+        component: () => import('@/views/auth/Register.vue')
+    }, {
+        // 用户主页
+        path: '/user',
         name: 'user',
-        component: () => import('@/views/user/User.vue'),
+        component: () => import('@/views/user/UserCenter.vue'),
         meta:{title: 'user'},
     }, {
         // 平台主页

@@ -15,7 +15,7 @@
             <router-link to="/home" class="nav-link">首页</router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/user" class="nav-link">发现</router-link>
+            <router-link to="/search" class="nav-link">搜索</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/user" class="nav-link">我的主页</router-link>
@@ -27,18 +27,21 @@
             <router-link to="/user" class="nav-link">发布</router-link>
           </li>
         </ul>
-
-        <!-- 用户头像/登录状态 -->
-        <div class="user-section">
-          <div v-if="isLoggedIn" class="user-info">
-            <img :src="userAvatar" alt="用户头像" class="user-avatar">
-            <span class="username">{{ username }}</span>
+        <template v-if="isLoggedIn">
+          <!-- 用户头像/登录状态 -->
+          <div class="user-section" @click="goToUserPage">
+            <div class="user-info">
+              <img :src="userAvatar" alt="用户头像" class="user-avatar">
+              <span class="username">{{ username }}</span>
+            </div>
           </div>
-          <div v-else class="auth-buttons">
-            <button class="login-btn">登录</button>
-            <button class="register-btn">注册</button>
+        </template>
+        <template v-else>
+          <div class="auth-buttons">
+            <router-link to="/login" class="login-btn">登录</router-link>
+            <router-link to="/register" class="register-btn">注册</router-link>
           </div>
-        </div>
+        </template>
       </div>
     </div>
   </nav>
@@ -71,6 +74,11 @@ const navigateTo = (path) => {
   router.push(path);
 };
 
+// 跳转到用户界面（用于头像和姓名区域）
+const goToUserPage = () => {
+  router.push('/user');
+}
+
 const navigateToHome = () => {
   router.push('/home');
 };
@@ -85,11 +93,12 @@ const handleLogout = () => {
 
 <style scoped>
 .top-navigation {
-  background-color: #ffffff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--nav-bg);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav-container {
@@ -103,11 +112,12 @@ const handleLogout = () => {
 }
 
 .nav-left .project-name {
-  color: #2c3e50;
+  color: var(--nav-text);
   font-size: 24px;
   font-weight: bold;
   margin: 0;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .nav-right {
@@ -126,7 +136,7 @@ const handleLogout = () => {
 
 .nav-link {
   text-decoration: none;
-  color: #333;
+  color: var(--text-primary);
   font-weight: 500;
   font-size: 16px;
   padding: 8px 12px;
@@ -135,8 +145,14 @@ const handleLogout = () => {
 }
 
 .nav-link:hover {
-  background-color: #f5f5f5;
-  color: #1890ff;
+  background-color: var(--bg-tertiary);
+  color: var(--info-color);
+}
+
+/* 激活状态的导航链接 */
+.nav-link.router-link-active {
+  color: var(--primary-color);
+  background-color: var(--bg-tertiary);
 }
 
 .user-section {
@@ -156,12 +172,14 @@ const handleLogout = () => {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e8e8e8;
+  border: 2px solid var(--border-color);
+  transition: border-color 0.3s ease;
 }
 
 .username {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .auth-buttons {
@@ -175,15 +193,23 @@ const handleLogout = () => {
   font-weight: 500;
   cursor: pointer;
   border: none;
+  transition: all 0.3s ease;
 }
 
 .login-btn {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--button-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.login-btn:hover {
+  background-color: var(--bg-tertiary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .register-btn {
-  background-color: #1890ff;
+  background: var(--primary-gradient);
   color: white;
 }
 
@@ -198,5 +224,49 @@ const handleLogout = () => {
 
 .logo {
   cursor: pointer;
+}
+
+.register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(1.1);
+}
+
+/* 深色模式下的特定调整 */
+[data-theme="dark"] .nav-link:hover {
+  background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .login-btn {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .user-avatar {
+  border-color: var(--border-dark);
+}
+
+/* 下拉菜单（如果有的话） */
+.dropdown-menu {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+  background-color: transparent;
+  border: none;
+  padding: 10px 16px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-tertiary);
 }
 </style>
